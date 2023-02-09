@@ -1,0 +1,3 @@
+﻿  Game.cpp
+C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 2\Demo\Lab2\Game.cpp(311,18): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+  Lab2.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 2\Demo\x64\Debug\Lab2.exe
