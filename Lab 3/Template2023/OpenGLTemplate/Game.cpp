@@ -249,7 +249,7 @@ void Game::Render()
 	// Render the horse 
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
+		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180*(3.14 / 180));
 		modelViewMatrixStack.Scale(2.5f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -258,22 +258,22 @@ void Game::Render()
 
 	// Render the horse 
 	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
-	modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
-	modelViewMatrixStack.Scale(2.5f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pHorseMesh->Render();
+		modelViewMatrixStack.Translate(glm::vec3(15.0f, 5.0f, -12.0f));
+		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 60*(3.14 / 180));
+		modelViewMatrixStack.Scale(2.5f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pHorseMesh->Render();
 	modelViewMatrixStack.Pop();
 
 	// Render the horse 
 	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
-	modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180.0f);
-	modelViewMatrixStack.Scale(2.5f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pHorseMesh->Render();
+		modelViewMatrixStack.Translate(glm::vec3(15.0f, 10.0f, 10.0f));
+		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 300*(3.14 / 180));
+		modelViewMatrixStack.Scale(2.5f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pHorseMesh->Render();
 	modelViewMatrixStack.Pop();
 
 
@@ -289,32 +289,56 @@ void Game::Render()
 
 	// Render the barrel 
 	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(105.0f, 0.0f, 0.0f));
-	modelViewMatrixStack.Scale(5.0f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pBarrelMesh->Render();
+		modelViewMatrixStack.Translate(glm::vec3(105.0f, 0.0f, 0.0f));
+		modelViewMatrixStack.Scale(5.0f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pBarrelMesh->Render();
 	modelViewMatrixStack.Pop();
 
 	// Render the barrel 
 	modelViewMatrixStack.Push();
-	modelViewMatrixStack.Translate(glm::vec3(110.0f, 0.0f, 0.0f));
-	modelViewMatrixStack.Scale(5.0f);
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	m_pBarrelMesh->Render();
+		modelViewMatrixStack.Translate(glm::vec3(110.0f, 0.0f, 0.0f));
+		modelViewMatrixStack.Scale(5.0f);
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pBarrelMesh->Render();
 	modelViewMatrixStack.Pop();
 	
 
-	// Render the sphere
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 150.0f));
-		modelViewMatrixStack.Scale(2.0f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
-		//pMainProgram->SetUniform("bUseTexture", false);
-		m_pSphere->Render();
+		// Render the sphere
+		//modelViewMatrixStack.Push();
+			modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 150.0f));
+			modelViewMatrixStack.Scale(2.0f);
+			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+			// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
+			//pMainProgram->SetUniform("bUseTexture", false);
+			m_pSphere->Render();
+		//modelViewMatrixStack.Pop();
+
+		// Render the sphere
+		//modelViewMatrixStack.Push();
+			modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 10.0f));
+			modelViewMatrixStack.Scale(3.0f);
+			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+			// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
+			//pMainProgram->SetUniform("bUseTexture", false);
+			m_pSphere->Render();
+		//modelViewMatrixStack.Pop();
+
+		// Render the sphere
+		//modelViewMatrixStack.Push();
+			modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 10.0f));
+			modelViewMatrixStack.Scale(3.0f);
+			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+			// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
+			//pMainProgram->SetUniform("bUseTexture", false);
+			m_pSphere->Render();
+		//modelViewMatrixStack.Pop();
 	modelViewMatrixStack.Pop();
 		
 	// Draw the 2D graphics after the 3D graphics
