@@ -41,6 +41,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "MatrixStack.h"
 #include "OpenAssetImportMesh.h"
 #include "Audio.h"
+#include "CatmullRom.h"
 
 // Constructor
 Game::Game()
@@ -55,6 +56,7 @@ Game::Game()
 	m_pSphere = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
+	m_pCatmullRom = NULL;
 
 	m_dt = 0.0;
 	m_framesPerSecond = 0;
@@ -74,6 +76,7 @@ Game::~Game()
 	delete m_pHorseMesh;
 	delete m_pSphere;
 	delete m_pAudio;
+	delete m_pCatmullRom;
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -102,6 +105,8 @@ void Game::Initialise()
 	m_pHorseMesh = new COpenAssetImportMesh;
 	m_pSphere = new CSphere;
 	m_pAudio = new CAudio;
+	m_pCatmullRom = new CCatmullRom;
+
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -174,6 +179,13 @@ void Game::Initialise()
 	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");					// Royalty free sound from freesound.org
 	//m_pAudio->LoadMusicStream("resources\\Audio\\DST-Garote.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
+
+
+	glm::vec3 p0 = glm::vec3(-500, 10, -200);
+	glm::vec3 p1 = glm::vec3(0, 10, -200);
+	glm::vec3 p2 = glm::vec3(0, 10, 200);
+	glm::vec3 p3 = glm::vec3(-500, 10, 200);
+	m_pCatmullRom->CreatePath(p0, p1, p2, p3);
 }
 
 // Render method runs repeatedly in a loop
@@ -258,7 +270,7 @@ void Game::Render()
 
 	// Render the horse 
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(15.0f, 5.0f, -12.0f));
+		modelViewMatrixStack.Translate(glm::vec3(15.0f, 0.0f, -12.0f));
 		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 60*(3.14 / 180));
 		modelViewMatrixStack.Scale(2.5f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -268,7 +280,7 @@ void Game::Render()
 
 	// Render the horse 
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(15.0f, 10.0f, 10.0f));
+		modelViewMatrixStack.Translate(glm::vec3(15.0f, 0.0f, 10.0f));
 		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 300*(3.14 / 180));
 		modelViewMatrixStack.Scale(2.5f);
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -340,6 +352,14 @@ void Game::Render()
 			m_pSphere->Render();
 		//modelViewMatrixStack.Pop();
 	modelViewMatrixStack.Pop();
+
+	modelViewMatrixStack.Push();
+	pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
+	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	// Render your object here
+	m_pCatmullRom->RenderPath();
+	modelViewMatrixStack.Pop();
 		
 	// Draw the 2D graphics after the 3D graphics
 	DisplayFrameRate();
@@ -354,8 +374,25 @@ void Game::Update()
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 	m_pCamera->Update(m_dt);
+	 
+	/*
+	static float t = 0.0f;
+	t += 0.0005f * (float)m_dt;
+	if (t > 1.0f)
+	{
+		t = 0.0f;
+	}
 
-	//m_pCamera->Set(glm::vec3 (0, 300, 0), glm::vec3(0, 0, 0), glm::vec3(1,0,0));
+	CCatmullRom ctmRom;
+	glm::vec3 p0 = glm::vec3(-500, 10, -200);
+	glm::vec3 p1 = glm::vec3(0, 10, -200);
+	glm::vec3 p2 = glm::vec3(0, 10, 200);
+	glm::vec3 p3 = glm::vec3(-500, 10, 200);
+
+	glm::vec3 x = ctmRom.Interpolate(p0, p1, p2, p3, t);
+
+	m_pCamera->Set(x, glm::vec3(0, 0, 0), glm::vec3(0,1,0));
+	*/
 
 	m_pAudio->Update();
 }
