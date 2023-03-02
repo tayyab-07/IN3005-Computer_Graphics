@@ -254,6 +254,9 @@ void Game::Render()
 	pSphereProgram->SetUniform("light1.position", viewMatrix*lightPosition1);
 	pSphereProgram->SetUniform("t", m_t);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// Render the sphere
 	modelViewMatrixStack.Push(); {
 		modelViewMatrixStack.Translate(glm::vec3(0.0f, 5.0f, 50.0f));
