@@ -42,6 +42,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "OpenAssetImportMesh.h"
 #include "Audio.h"
 #include "CatmullRom.h"
+#include "Tunnel.h"
 
 // Constructor
 Game::Game()
@@ -57,11 +58,13 @@ Game::Game()
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
+	m_pTunnel = NULL;
 
 	m_dt = 0.0;
 	m_framesPerSecond = 0;
 	m_frameCount = 0;
 	m_elapsedTime = 0.0f;
+	m_currentDistance = 0.0f;
 }
 
 // Destructor
@@ -77,6 +80,7 @@ Game::~Game()
 	delete m_pSphere;
 	delete m_pAudio;
 	delete m_pCatmullRom;
+	delete m_pTunnel;
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -106,6 +110,7 @@ void Game::Initialise()
 	m_pSphere = new CSphere;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
+	m_pTunnel = new CTunnel;
 
 
 	RECT dimensions = m_gameWindow.GetDimensions();
@@ -118,12 +123,15 @@ void Game::Initialise()
 	m_pCamera->SetPerspectiveProjectionMatrix(45.0f, (float) width / (float) height, 0.5f, 5000.0f);
 
 	// Load shaders
+	//Added 2 new shaders at the bottom for my tunnel object
 	vector<CShader> shShaders;
 	vector<string> sShaderFileNames;
 	sShaderFileNames.push_back("mainShader.vert");
 	sShaderFileNames.push_back("mainShader.frag");
 	sShaderFileNames.push_back("textShader.vert");
 	sShaderFileNames.push_back("textShader.frag");
+	sShaderFileNames.push_back("tunnelShader.vert");
+	sShaderFileNames.push_back("tunnelShader.frag");
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -154,6 +162,14 @@ void Game::Initialise()
 	pFontProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pFontProgram);
 
+	// Create a tunnel shader program
+	CShaderProgram *pTunnelProgram = new CShaderProgram;
+	pTunnelProgram->CreateProgram();
+	pTunnelProgram->AddShaderToProgram(&shShaders[4]);
+	pTunnelProgram->AddShaderToProgram(&shShaders[5]);
+	pTunnelProgram->LinkProgram();
+	m_pShaderPrograms->push_back(pTunnelProgram);
+
 	// You can follow this pattern to load additional shaders
 
 	// Create the skybox
@@ -180,12 +196,12 @@ void Game::Initialise()
 	//m_pAudio->LoadMusicStream("resources\\Audio\\DST-Garote.mp3");	// Royalty free music from http://www.nosoapradio.us/
 	m_pAudio->PlayMusicStream();
 
+	//tunnel texture downloaded from: https://opengameart.org/node/7651 on 11th Mar 2023
+	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg");
 
-	glm::vec3 p0 = glm::vec3(-500, 10, -200);
-	glm::vec3 p1 = glm::vec3(0, 10, -200);
-	glm::vec3 p2 = glm::vec3(0, 10, 200);
-	glm::vec3 p3 = glm::vec3(-500, 10, 200);
-	m_pCatmullRom->CreatePath(p0, p1, p2, p3);
+	//initialise centreline for the rotating camera path
+	m_pCatmullRom->CreateCentreline();
+
 }
 
 // Render method runs repeatedly in a loop
@@ -209,7 +225,6 @@ void Game::Render()
 	int cubeMapTextureUnit = 10; 
 	pMainProgram->SetUniform("CubeMapTex", cubeMapTextureUnit);
 	
-
 	// Set the projection matrix
 	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 
@@ -219,7 +234,6 @@ void Game::Render()
 	glm::mat4 viewMatrix = modelViewMatrixStack.Top();
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
 
-	
 	// Set light and materials in main shader program
 	glm::vec4 lightPosition1 = glm::vec4(-100, 100, -100, 1); // Position of light source *in world coordinates*
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
@@ -231,7 +245,6 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(0.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 		
-
 	// Render the skybox and terrain with full ambient reflectance 
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("renderSkybox", true);
@@ -255,110 +268,43 @@ void Game::Render()
 	// Turn on diffuse + specular materials
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
-	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance	
+	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 
-
-	// Render the horse 
+	//Render path
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 180*(3.14 / 180));
-		modelViewMatrixStack.Scale(2.5f);
+		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pHorseMesh->Render();
+		// Render your object here
+		//m_pCatmullRom->RenderCentreline();
 	modelViewMatrixStack.Pop();
 
-	// Render the horse 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// Use the tunnel shader program 
+	CShaderProgram *pTunnelProgram = (*m_pShaderPrograms)[2];
+	pTunnelProgram->UseProgram();
+	pTunnelProgram->SetUniform("bUseTexture", true);
+	pTunnelProgram->SetUniform("sampler0", 0);
+
+	// Set the projection matrix
+	pTunnelProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+
+	// Set light and materials in tunnel shader program
+	pTunnelProgram->SetUniform("light1.position", viewMatrix * lightPosition1); // Position of light source *in eye coordinates*
+	pTunnelProgram->SetUniform("light1.La", glm::vec3(1, 1, 1));	// Ambient colour of light
+	pTunnelProgram->SetUniform("light1.Ld", glm::vec3(1, 1, 1));	// Diffuse colour of light
+	pTunnelProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
+	pTunnelProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
+
+	// Render the tunnel
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(15.0f, 0.0f, -12.0f));
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 60*(3.14 / 180));
-		modelViewMatrixStack.Scale(2.5f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pHorseMesh->Render();
-	modelViewMatrixStack.Pop();
-
-	// Render the horse 
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(15.0f, 0.0f, 10.0f));
-		modelViewMatrixStack.Rotate(glm::vec3(0.0f, 1.0f, 0.0f), 300*(3.14 / 180));
-		modelViewMatrixStack.Scale(2.5f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pHorseMesh->Render();
-	modelViewMatrixStack.Pop();
-
-
-	
-	// Render the barrel 
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(100.0f, 0.0f, 0.0f));
-		modelViewMatrixStack.Scale(5.0f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pBarrelMesh->Render();
-	modelViewMatrixStack.Pop();
-
-	// Render the barrel 
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(105.0f, 0.0f, 0.0f));
-		modelViewMatrixStack.Scale(5.0f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pBarrelMesh->Render();
-	modelViewMatrixStack.Pop();
-
-	// Render the barrel 
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(110.0f, 0.0f, 0.0f));
-		modelViewMatrixStack.Scale(5.0f);
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pBarrelMesh->Render();
-	modelViewMatrixStack.Pop();
-	
-
-	modelViewMatrixStack.Push();
-		// Render the sphere
-		//modelViewMatrixStack.Push();
-			modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 150.0f));
-			modelViewMatrixStack.Scale(2.0f);
-			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-			// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
-			//pMainProgram->SetUniform("bUseTexture", false);
-			m_pSphere->Render();
-		//modelViewMatrixStack.Pop();
-
-		// Render the sphere
-		//modelViewMatrixStack.Push();
-			modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 10.0f));
-			modelViewMatrixStack.Scale(3.0f);
-			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-			// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
-			//pMainProgram->SetUniform("bUseTexture", false);
-			m_pSphere->Render();
-		//modelViewMatrixStack.Pop();
-
-		// Render the sphere
-		//modelViewMatrixStack.Push();
-			modelViewMatrixStack.Translate(glm::vec3(0.0f, 2.0f, 10.0f));
-			modelViewMatrixStack.Scale(3.0f);
-			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-			// To turn off texture mapping and use the sphere colour only (currently white material), uncomment the next line
-			//pMainProgram->SetUniform("bUseTexture", false);
-			m_pSphere->Render();
-		//modelViewMatrixStack.Pop();
-	modelViewMatrixStack.Pop();
-
-	modelViewMatrixStack.Push();
-	pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
-	pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-	pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-	// Render your object here
-	m_pCatmullRom->RenderPath();
+		modelViewMatrixStack.Translate(glm::vec3(-6, 0, 5));
+		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// To turn off texture mapping and use the tunnel colour only, uncomment the next line
+		//pTunnelProgram->SetUniform("bUseTexture", false);
+		m_pTunnel->Render();
 	modelViewMatrixStack.Pop();
 		
 	// Draw the 2D graphics after the 3D graphics
@@ -373,36 +319,23 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	m_pCamera->Update(m_dt);
+	//m_pCamera->Update(m_dt);
 	 
-	/*
-	static float t = 0.0f;
-	t += 0.0005f * (float)m_dt;
-	if (t > 1.0f)
-	{
-		t = 0.0f;
-	}
-
-	CCatmullRom ctmRom;
-	glm::vec3 p0 = glm::vec3(-500, 10, -200);
-	glm::vec3 p1 = glm::vec3(0, 10, -200);
-	glm::vec3 p2 = glm::vec3(0, 10, 200);
-	glm::vec3 p3 = glm::vec3(-500, 10, 200);
-
-	glm::vec3 x = ctmRom.Interpolate(p0, p1, p2, p3, t);
-
-	m_pCamera->Set(x, glm::vec3(0, 0, 0), glm::vec3(0,1,0));
-	*/
-
 	m_pAudio->Update();
+
+	//increment distance by time elapsed, then pass this value to sample function to move camera
+	m_currentDistance = m_currentDistance + m_dt * 0.015;
+	glm::vec3 p;
+	m_pCatmullRom->Sample(m_currentDistance, p);
+
+	//set the camer following the path defined above, looking up that the object, with an upvector in the y direction
+	m_pCamera->Set(p, glm::vec3(0, 5, 0), glm::vec3(0, 1, 0));
 }
 
 
 
 void Game::DisplayFrameRate()
 {
-
-
 	CShaderProgram *fontProgram = (*m_pShaderPrograms)[1];
 
 	RECT dimensions = m_gameWindow.GetDimensions();
@@ -446,7 +379,6 @@ void Game::GameLoop()
 		Render();
 	}
 	*/
-	
 	
 	// Variable timer
 	m_pHighResolutionTimer->Start();

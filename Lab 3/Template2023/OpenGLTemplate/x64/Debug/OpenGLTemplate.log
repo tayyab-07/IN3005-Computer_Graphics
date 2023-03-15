@@ -1,7 +1,24 @@
-﻿  CatmullRom.cpp
+﻿  Audio.cpp
+  Camera.cpp
+  CatmullRom.cpp
+  Cubemap.cpp
+  FreeTypeFont.cpp
   Game.cpp
 C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\OpenGLTemplate\Game.cpp(264,76): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\OpenGLTemplate\Game.cpp(274,75): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\OpenGLTemplate\Game.cpp(284,76): warning C4305: 'argument': truncation from 'double' to 'float'
+  GameWindow.cpp
+  HighResolutionTimer.cpp
+  MatrixStack.cpp
+  OpenAssetImportMesh.cpp
+  Plane.cpp
+  Shaders.cpp
+  Skybox.cpp
+  Sphere.cpp
+  Texture.cpp
+  VertexBufferObject.cpp
+  VertexBufferObjectIndexed.cpp
   Generating Code...
+     Creating library C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\x64\Debug\OpenGLTemplate.lib and object C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\x64\Debug\OpenGLTemplate.exp
+MSVCRTD.lib(initializers.obj) : warning LNK4098: defaultlib 'msvcrt.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
   OpenGLTemplate.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\x64\Debug\OpenGLTemplate.exe

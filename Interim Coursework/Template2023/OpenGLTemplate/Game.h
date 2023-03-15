@@ -17,6 +17,7 @@ class CSphere;
 class COpenAssetImportMesh;
 class CAudio;
 class CCatmullRom;
+class CTunnel;
 
 class Game {
 private:
@@ -37,11 +38,13 @@ private:
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom *m_pCatmullRom;
+	CTunnel* m_pTunnel;
 
 	// Some other member variables
 	double m_dt;
 	int m_framesPerSecond;
 	bool m_appActive;
+	float m_currentDistance;
 
 
 public:
