@@ -15,6 +15,9 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{8bf5c3e1-be9e-4c62-8c2d-5c0d5c307b94}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\BasicShapes">
+      <UniqueIdentifier>{0ca6dc92-fd7e-49d9-ad09-471392edcb19}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h">
@@ -47,16 +50,10 @@
     <ClInclude Include="OpenAssetImportMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Plane.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Shaders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Skybox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Texture.h">
@@ -70,6 +67,15 @@
     </ClInclude>
     <ClInclude Include="CatmullRom.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Header Files\BasicShapes</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Header Files\BasicShapes</Filter>
+    </ClInclude>
+    <ClInclude Include="Tunnel.h">
+      <Filter>Header Files\BasicShapes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +130,9 @@
     <ClCompile Include="CatmullRom.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tunnel.cpp">
+      <Filter>Source Files\BasicShapes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\mainShader.frag">
@@ -136,6 +145,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="resources\shaders\textShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\tunnelShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\tunnelShader.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

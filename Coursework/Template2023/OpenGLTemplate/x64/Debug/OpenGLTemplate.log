@@ -1,7 +1,10 @@
 ﻿  CatmullRom.cpp
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\CatmullRom.cpp(277,54): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
   Game.cpp
-C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\OpenGLTemplate\Game.cpp(264,76): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\OpenGLTemplate\Game.cpp(274,75): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\OpenGLTemplate\Game.cpp(284,76): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(329,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(492,35): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(496,34): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(499,34): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(502,34): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Generating Code...
-  OpenGLTemplate.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Lab 3\Template2023\x64\Debug\OpenGLTemplate.exe
+  OpenGLTemplate.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\x64\Debug\OpenGLTemplate.exe
