@@ -209,7 +209,7 @@ void CCatmullRom::CreateCentreline()
 	SetControlPoints();
 
 	// Call UniformlySampleControlPoints with the number of samples required
-	UniformlySampleControlPoints(500);
+	UniformlySampleControlPoints(5000);
 
 	// Create a VAO called m_vaoCentreline and a VBO to get the points onto the graphics card
 	glGenVertexArrays(1, &m_vaoCentreline);
@@ -249,10 +249,86 @@ void CCatmullRom::CreateOffsetCurves()
 {
 	// Compute the offset curves, one left, and one right.  Store the points in m_leftOffsetPoints and m_rightOffsetPoints respectively
 
+	float w = 10;
+	glm::vec3 y = glm::vec3(0, 1, 0);
+
+	for (int i = 0; i < m_centrelinePoints.size() - 1; i++)
+	{
+		glm::vec3 p = m_centrelinePoints[i];
+		glm::vec3 pNext = m_centrelinePoints[i + 1];
+		glm::vec3 t = normalize(pNext - p);
+		glm::vec3 n = glm::vec3((t.y*y.z)-(t.z*y.y), (t.z*y.x)-(t.x*y.z), (t.x*y.y)-(t.y*y.x));
+
+		m_leftOffsetPoints.push_back(p - (w/2) * n);
+		m_rightOffsetPoints.push_back(p + (w/2) * n);
+	}
+
 	// Generate two VAOs called m_vaoLeftOffsetCurve and m_vaoRightOffsetCurve, each with a VBO, and get the offset curve points on the graphics card
 	// Note it is possible to only use one VAO / VBO with all the points instead.
 
+	//set the txture coordinates and normal for the points in the VBO
+	glm::vec2 texCoord(0.0f, 0.0f);
+	glm::vec3 normal(0.0f, 1.0f, 0.0f);
 
+	// Set the vertex attribute locations
+	GLsizei stride = 2 * sizeof(glm::vec3) + sizeof(glm::vec2);
+
+	glGenVertexArrays(1, &m_vaoLeftOffsetCurve);
+	glBindVertexArray(m_vaoLeftOffsetCurve);
+
+	CVertexBufferObject leftVBO;
+	leftVBO.Create();
+	leftVBO.Bind();
+
+	// use a for loop to add points to vbo from both left and right offset points
+	for (unsigned int i = 0; i < m_leftOffsetPoints.size(); i++)
+	{
+		glm::vec3 l = m_leftOffsetPoints[i];
+		leftVBO.AddData(&l, sizeof(glm::vec3));
+		leftVBO.AddData(&texCoord, sizeof(glm::vec2));
+		leftVBO.AddData(&normal, sizeof(glm::vec3));
+	}
+
+	// Upload the VBO to the GPU
+	leftVBO.UploadDataToGPU(GL_STATIC_DRAW);
+	// Vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+	// Texture coordinates
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)sizeof(glm::vec3));
+	// Normal vectors
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
+
+
+	glGenVertexArrays(1, &m_vaoRightOffsetCurve);
+	glBindVertexArray(m_vaoRightOffsetCurve);
+
+	CVertexBufferObject rightVBO;
+	rightVBO.Create();
+	rightVBO.Bind();
+
+	// use a for loop to add points to vbo from both left and right offset points
+	for (unsigned int i = 0; i < m_rightOffsetPoints.size(); i++)
+	{
+		glm::vec3 r = m_rightOffsetPoints[i];
+		rightVBO.AddData(&r, sizeof(glm::vec3));
+		rightVBO.AddData(&texCoord, sizeof(glm::vec2));
+		rightVBO.AddData(&normal, sizeof(glm::vec3));
+	}
+
+	rightVBO.UploadDataToGPU(GL_STATIC_DRAW);
+	// Vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+	// Texture coordinates
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)sizeof(glm::vec3));
+	// Normal vectors
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
+	
 }
 
 
@@ -269,21 +345,35 @@ void CCatmullRom::RenderCentreline()
 	// Bind the VAO m_vaoCentreline and render it
 	glBindVertexArray(m_vaoCentreline);
 
-	//change the line size and point isze so theyr emore visible when rendered
-	glLineWidth(20);
+	//change the line size and point size so theyre more visible when rendered
+	glLineWidth(10);
 	glPointSize(5);
 
 	//render the path as both points and as a line loop
 	glDrawArrays(GL_POINTS, 0, m_centrelinePoints.size());
-	//glDrawArrays(GL_LINE_LOOP, 0, m_centrelinePoints.size());
+	glDrawArrays(GL_LINE_LOOP, 0, m_centrelinePoints.size());
 
 }
 
 void CCatmullRom::RenderOffsetCurves()
 {
 	// Bind the VAO m_vaoLeftOffsetCurve and render it
+	glBindVertexArray(m_vaoLeftOffsetCurve);
+	//change the line size and point size so theyre more visible when rendered
+	glLineWidth(10);
+	glPointSize(5);
+	//render the path as both points and as a line loop
+	glDrawArrays(GL_POINTS, 0, m_leftOffsetPoints.size());
+	glDrawArrays(GL_LINE_LOOP, 0, m_leftOffsetPoints.size());
 
 	// Bind the VAO m_vaoRightOffsetCurve and render it
+	glBindVertexArray(m_vaoRightOffsetCurve);
+	//change the line size and point size so theyre more visible when rendered
+	glLineWidth(10);
+	glPointSize(5);
+	//render the path as both points and as a line loop
+	glDrawArrays(GL_POINTS, 0, m_rightOffsetPoints.size());
+	glDrawArrays(GL_LINE_LOOP, 0, m_rightOffsetPoints.size());
 }
 
 

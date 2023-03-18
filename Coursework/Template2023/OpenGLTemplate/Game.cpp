@@ -200,8 +200,11 @@ void Game::Initialise()
 	//tunnel texture downloaded from: https://opengameart.org/node/7651 on 11th Mar 2023
 	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg");
 
-	//initialise centreline for the rotating camera path
+	//initialise centreline for the track
 	m_pCatmullRom->CreateCentreline();
+
+	//initialise offset curves for the track
+	m_pCatmullRom->CreateOffsetCurves();
 
 }
 
@@ -280,6 +283,15 @@ void Game::Render()
 		m_pCatmullRom->RenderCentreline();
 	modelViewMatrixStack.Pop();
 
+	//Render path
+	modelViewMatrixStack.Push();
+		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCatmullRom->RenderOffsetCurves();
+	modelViewMatrixStack.Pop();
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	// Use the tunnel shader program 
@@ -324,26 +336,25 @@ void Game::Update()
 	 
 	m_pAudio->Update();
 
+	// code to set the camera along the path
+	
 	//increment distance by time elapsed, then pass this value to sample function to move camera
-	//m_currentDistance = m_currentDistance + m_dt * 0.2;
-	m_currentDistance = m_currentDistance + m_dt * m_cameraSpeed;
-	//m_cameraSpeed = m_cameraSpeed - 0.0005;
+	m_currentDistance = m_currentDistance + m_dt * 0.2;
+	//increment distance by m_camera speed which could be incremented based on KBM controls
+	//m_currentDistance = m_currentDistance + m_dt * m_cameraSpeed;
 	glm::vec3 p;
 	m_pCatmullRom->Sample(m_currentDistance, p);
-
 	glm::vec3 pNext;
 	m_pCatmullRom->Sample(m_currentDistance + 1, pNext);
-
 	glm::vec3 t;
 	t = (pNext - p);
-
 	float tMag;
 	tMag = sqrt((t.x * t.x) + (t.y * t.y) + (t.z * t.z));
 	t = t / tMag;
-	
-
 	//set the camera following the path defined above, looking up that the object, with an upvector in the y direction
-	m_pCamera->Set(p, (p + 10.f * t), glm::vec3(0, 1, 0));
+	m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
+	
+	
 }
 
 
@@ -485,24 +496,6 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		case VK_F1:
 			m_pAudio->PlayEventSound();
 			break;
-
-		case 'W':
-			if (m_cameraSpeed < 0.2)
-			{
-				m_cameraSpeed = m_cameraSpeed + 0.001;
-				break;
-			}
-		case 'S':
-			m_cameraSpeed = m_cameraSpeed - 0.1;
-			break;
-		case VK_UP:
-			m_cameraSpeed = m_cameraSpeed + 0.001;
-			break;
-		case VK_DOWN:
-			m_cameraSpeed = m_cameraSpeed - 0.1;
-			break;
-
-
 		}
 		break;
 
