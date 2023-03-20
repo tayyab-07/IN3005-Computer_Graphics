@@ -95,6 +95,64 @@ void CCatmullRom::SetControlPoints()
 	m_controlPoints.push_back(glm::vec3(900, 5, 200));
 	m_controlPoints.push_back(glm::vec3(900, 5, 100));
 
+	m_controlUpVectors.push_back(glm::vec3(-1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 }
 
 
@@ -218,7 +276,7 @@ void CCatmullRom::CreateCentreline()
 	vbo.Create();
 	vbo.Bind();
 
-	//set the txture coordinates and normal for the points in the VBO
+	//set the texture coordinates and normal for the points in the VBO
 	glm::vec2 texCoord(0.0f, 0.0f);
 	glm::vec3 normal(0.0f, 1.0f, 0.0f);
 	//add the data to every point in the centreline  
@@ -227,7 +285,7 @@ void CCatmullRom::CreateCentreline()
 		glm::vec3 v = m_centrelinePoints[i];
 		vbo.AddData(&v, sizeof(glm::vec3));
 		vbo.AddData(&texCoord, sizeof(glm::vec2));
-		vbo.AddData(&normal, sizeof(glm::vec3));
+		vbo.AddData(&m_centrelineUpVectors[i], sizeof(glm::vec3));
 	}
 	// Upload the VBO to the GPU
 	vbo.UploadDataToGPU(GL_STATIC_DRAW);
@@ -249,19 +307,20 @@ void CCatmullRom::CreateOffsetCurves()
 {
 	// Compute the offset curves, one left, and one right.  Store the points in m_leftOffsetPoints and m_rightOffsetPoints respectively
 
-	float w = 10;
-	glm::vec3 y = glm::vec3(0, 1, 0);
+	float w = 20;
 
-	for (int i = 0; i < m_centrelinePoints.size() - 1; i++)
+	for (int i = 0; i < m_centrelinePoints.size(); i++)
 	{
 		glm::vec3 p = m_centrelinePoints[i];
-		glm::vec3 pNext = m_centrelinePoints[i + 1];
+		glm::vec3 up = m_centrelineUpVectors[i];
+		glm::vec3 pNext = m_centrelinePoints[(i + 1) % 5000];
 		glm::vec3 t = normalize(pNext - p);
-		glm::vec3 n = glm::vec3((t.y*y.z)-(t.z*y.y), (t.z*y.x)-(t.x*y.z), (t.x*y.y)-(t.y*y.x));
+		glm::vec3 n = glm::vec3((t.y*up.z)-(t.z*up.y), (t.z*up.x)-(t.x*up.z), (t.x*up.y)-(t.y*up.x));
 
-		m_leftOffsetPoints.push_back(p - (w/2) * n);
-		m_rightOffsetPoints.push_back(p + (w/2) * n);
+		m_leftOffsetPoints.push_back(p - (w * n));
+		m_rightOffsetPoints.push_back(p + (w * n));
 	}
+
 
 	// Generate two VAOs called m_vaoLeftOffsetCurve and m_vaoRightOffsetCurve, each with a VBO, and get the offset curve points on the graphics card
 	// Note it is possible to only use one VAO / VBO with all the points instead.
