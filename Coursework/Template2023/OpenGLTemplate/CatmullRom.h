@@ -52,5 +52,6 @@ private:
 
 
 	unsigned int m_vertexCount;				// Number of vertices in the track VBO
+	//int m_vertexCount;				// Number of vertices in the track VBO
 
 };

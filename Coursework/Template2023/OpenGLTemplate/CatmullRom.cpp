@@ -35,82 +35,75 @@ void CCatmullRom::SetControlPoints()
 	// Optionally, set upvectors (m_controlUpVectors, one for each control point as well)
 
 	// Points along the track
-	// Total of 53 points split up into 10s to make it easier to locate a point
-	m_controlPoints.push_back(glm::vec3(900, 5, 0));
-	m_controlPoints.push_back(glm::vec3(900, 20, -150));
-	m_controlPoints.push_back(glm::vec3(900, 35, -300));
-	m_controlPoints.push_back(glm::vec3(900, 50, -450));
-	m_controlPoints.push_back(glm::vec3(900, 65, -600));
-	m_controlPoints.push_back(glm::vec3(900, 65, -675));
-	m_controlPoints.push_back(glm::vec3(875, 65, -700));
-	m_controlPoints.push_back(glm::vec3(850, 55, -675));
-	m_controlPoints.push_back(glm::vec3(800, 40, -525));
-	m_controlPoints.push_back(glm::vec3(650, 25, -450));
+	// Total of 33 points split up into 10s to make it easier to locate a point
+	m_controlPoints.push_back(glm::vec3(900, 100, 0));
+	m_controlPoints.push_back(glm::vec3(850, 100, -200));
+	m_controlPoints.push_back(glm::vec3(800, 100, -400));
+	m_controlPoints.push_back(glm::vec3(750, 100, -600));
+	m_controlPoints.push_back(glm::vec3(550, 100, -800));
+	m_controlPoints.push_back(glm::vec3(300, 100, -900));
+	m_controlPoints.push_back(glm::vec3(0, 100, -900));
+	m_controlPoints.push_back(glm::vec3(-200, 90, -900));
+	m_controlPoints.push_back(glm::vec3(-400, 80, -800));
+	m_controlPoints.push_back(glm::vec3(-450, 60, -600)); 
+	
+	m_controlPoints.push_back(glm::vec3(-650, 50, -400));
+	m_controlPoints.push_back(glm::vec3(-750, 40, -200));
+	m_controlPoints.push_back(glm::vec3(-700, 30, 0)); 
+	m_controlPoints.push_back(glm::vec3(-800, 20, 250));
+	m_controlPoints.push_back(glm::vec3(-950, 20, 400));  
+	m_controlPoints.push_back(glm::vec3(-1000, 20, 600));
+	m_controlPoints.push_back(glm::vec3(-900, 20, 800));
+	m_controlPoints.push_back(glm::vec3(-750, 20, 750));  
+	m_controlPoints.push_back(glm::vec3(-700, 30, 600));
+	m_controlPoints.push_back(glm::vec3(-650, 30, 400)); 
 
-	m_controlPoints.push_back(glm::vec3(350, 15, -350));
-	m_controlPoints.push_back(glm::vec3(175, 5, -335));
-	m_controlPoints.push_back(glm::vec3(0, 5, -325));
-	m_controlPoints.push_back(glm::vec3(0, 10, -400));
-	m_controlPoints.push_back(glm::vec3(175, 25, -450));
-	m_controlPoints.push_back(glm::vec3(275, 50, -550));
-	m_controlPoints.push_back(glm::vec3(175, 85, -700));
-	m_controlPoints.push_back(glm::vec3(-50, 110, -725));
-	m_controlPoints.push_back(glm::vec3(-200, 110, -700));
-	m_controlPoints.push_back(glm::vec3(-250, 105, -500));
+	m_controlPoints.push_back(glm::vec3(-550, 30, 200));
+	m_controlPoints.push_back(glm::vec3(-200, 30, 50));
+	m_controlPoints.push_back(glm::vec3(50, 35, 150));
+	m_controlPoints.push_back(glm::vec3(0, 40, 400));
+	m_controlPoints.push_back(glm::vec3(-200, 50, 350)); 
+	m_controlPoints.push_back(glm::vec3(-350, 50, 650));
+	m_controlPoints.push_back(glm::vec3(-200, 50, 850)); 
+	m_controlPoints.push_back(glm::vec3(0, 65, 850));
+	m_controlPoints.push_back(glm::vec3(300, 80, 800)); 
+	m_controlPoints.push_back(glm::vec3(350, 85, 600)); 
 
-	m_controlPoints.push_back(glm::vec3(-300, 100, -350));
-	m_controlPoints.push_back(glm::vec3(-300, 70, -225));
-	m_controlPoints.push_back(glm::vec3(-350, 55, -100));
-	m_controlPoints.push_back(glm::vec3(-400, 35, 0));
-	m_controlPoints.push_back(glm::vec3(-400, 15, 150));
-	m_controlPoints.push_back(glm::vec3(-450, 15, 250));
-	m_controlPoints.push_back(glm::vec3(-500, 15, 350));
-	m_controlPoints.push_back(glm::vec3(-550, 15, 450));
-	m_controlPoints.push_back(glm::vec3(-500, 15, 550));
-	m_controlPoints.push_back(glm::vec3(-450, 15, 550));
+	m_controlPoints.push_back(glm::vec3(400, 90, 400));
+	m_controlPoints.push_back(glm::vec3(600, 95, 350));
+	m_controlPoints.push_back(glm::vec3(800, 100, 200));
 
-	m_controlPoints.push_back(glm::vec3(-400, 15, 400));
-	m_controlPoints.push_back(glm::vec3(-375, 15, 300));
-	m_controlPoints.push_back(glm::vec3(-350, 15, 200));
-	m_controlPoints.push_back(glm::vec3(-325, 20, 100));
-	m_controlPoints.push_back(glm::vec3(-300, 25, 0));
-	m_controlPoints.push_back(glm::vec3(-250, 40, -150));
-	m_controlPoints.push_back(glm::vec3(-200, 40, -200));
-	m_controlPoints.push_back(glm::vec3(-150, 30, -225));
-	m_controlPoints.push_back(glm::vec3(-100, 20, -200));
-	m_controlPoints.push_back(glm::vec3(-50, 15, -175));
 
-	m_controlPoints.push_back(glm::vec3(-25, 15, -150));
-	m_controlPoints.push_back(glm::vec3(-25, 15, -75));
-	m_controlPoints.push_back(glm::vec3(25, 15, -75));
-	m_controlPoints.push_back(glm::vec3(25, 15, 0));
-	m_controlPoints.push_back(glm::vec3(25, 10, 100));
-	m_controlPoints.push_back(glm::vec3(25, 7.5, 200));
-	m_controlPoints.push_back(glm::vec3(125, 6.25, 275));
-	m_controlPoints.push_back(glm::vec3(225, 5, 350));
-	m_controlPoints.push_back(glm::vec3(500, 5, 350));
-	m_controlPoints.push_back(glm::vec3(750, 5, 350));
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// UP VECTORS
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.2, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.4, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.4, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.4, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.3, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.2, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0)); 
 
-	m_controlPoints.push_back(glm::vec3(825, 5, 275));
-	m_controlPoints.push_back(glm::vec3(900, 5, 200));
-	m_controlPoints.push_back(glm::vec3(900, 5, 100));
+	m_controlUpVectors.push_back(glm::vec3(0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0.2, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0.2, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0.2, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0));
 
-	m_controlUpVectors.push_back(glm::vec3(-1, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(-1, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(-1, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.2, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.1, 1, 0)); 
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
@@ -118,40 +111,7 @@ void CCatmullRom::SetControlPoints()
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
+	m_controlUpVectors.push_back(glm::vec3(-0.2, 1, 0));
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 }
 
@@ -307,7 +267,7 @@ void CCatmullRom::CreateOffsetCurves()
 {
 	// Compute the offset curves, one left, and one right.  Store the points in m_leftOffsetPoints and m_rightOffsetPoints respectively
 
-	float w = 20;
+	float w = 40;
 
 	for (int i = 0; i < m_centrelinePoints.size(); i++)
 	{
@@ -396,6 +356,56 @@ void CCatmullRom::CreateTrack()
 	
 	// Generate a VAO called m_vaoTrack and a VBO to get the offset curve points and indices on the graphics card
 
+	glGenVertexArrays(1, &m_vaoTrack);
+	glBindVertexArray(m_vaoTrack);
+
+	CVertexBufferObject vbo;
+	vbo.Create();
+	vbo.Bind();
+
+	glm::vec2 texCoord[4]
+	{
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f)
+	};
+
+	glm::vec3 up = glm::vec3(0, 1, 0);
+
+	float totalPoints = m_rightOffsetPoints.size(); //+ m_leftOffsetPoints.size();
+
+	for (int i = 0; i < totalPoints + 1; i++)
+	{
+		glm::vec3 p = m_leftOffsetPoints[i %m_rightOffsetPoints.size()];
+		vbo.AddData(&p, sizeof(glm::vec3));
+		vbo.AddData(&texCoord[i % 2], sizeof(glm::vec2));
+		vbo.AddData(&m_centrelineUpVectors[i %m_rightOffsetPoints.size()], sizeof(glm::vec3));
+		//vbo.AddData(&up, sizeof(glm::vec3));
+
+		glm::vec3 q = m_rightOffsetPoints[i %m_rightOffsetPoints.size()];
+		vbo.AddData(&q, sizeof(glm::vec3));
+		vbo.AddData(&texCoord[(i % 2) + 2], sizeof(glm::vec2));
+		vbo.AddData(&m_centrelineUpVectors[i %m_rightOffsetPoints.size()], sizeof(glm::vec3));
+		//vbo.AddData(&up, sizeof(glm::vec3));
+
+		m_vertexCount = m_vertexCount + 2;
+	}
+
+	// Set the vertex attribute locations
+	GLsizei stride = 2 * sizeof(glm::vec3) + sizeof(glm::vec2);
+
+	vbo.UploadDataToGPU(GL_STATIC_DRAW);
+	// Vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+	// Texture coordinates
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)sizeof(glm::vec3));
+	// Normal vectors
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
+
 }
 
 
@@ -409,9 +419,8 @@ void CCatmullRom::RenderCentreline()
 	glPointSize(5);
 
 	//render the path as both points and as a line loop
-	glDrawArrays(GL_POINTS, 0, m_centrelinePoints.size());
-	glDrawArrays(GL_LINE_LOOP, 0, m_centrelinePoints.size());
-
+	//glDrawArrays(GL_POINTS, 0, m_centrelinePoints.size());
+	//glDrawArrays(GL_LINE_LOOP, 0, m_centrelinePoints.size());
 }
 
 void CCatmullRom::RenderOffsetCurves()
@@ -422,8 +431,8 @@ void CCatmullRom::RenderOffsetCurves()
 	glLineWidth(10);
 	glPointSize(5);
 	//render the path as both points and as a line loop
-	glDrawArrays(GL_POINTS, 0, m_leftOffsetPoints.size());
-	glDrawArrays(GL_LINE_LOOP, 0, m_leftOffsetPoints.size());
+	//glDrawArrays(GL_POINTS, 0, m_leftOffsetPoints.size());
+	//glDrawArrays(GL_LINE_LOOP, 0, m_leftOffsetPoints.size());
 
 	// Bind the VAO m_vaoRightOffsetCurve and render it
 	glBindVertexArray(m_vaoRightOffsetCurve);
@@ -431,14 +440,23 @@ void CCatmullRom::RenderOffsetCurves()
 	glLineWidth(10);
 	glPointSize(5);
 	//render the path as both points and as a line loop
-	glDrawArrays(GL_POINTS, 0, m_rightOffsetPoints.size());
-	glDrawArrays(GL_LINE_LOOP, 0, m_rightOffsetPoints.size());
+	//glDrawArrays(GL_POINTS, 0, m_rightOffsetPoints.size());
+	//glDrawArrays(GL_LINE_LOOP, 0, m_rightOffsetPoints.size());
 }
 
 
 void CCatmullRom::RenderTrack()
 {
 	// Bind the VAO m_vaoTrack and render it
+
+	glBindVertexArray(m_vaoTrack);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, m_vertexCount);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	
 }
 
 int CCatmullRom::CurrentLap(float d)

@@ -206,6 +206,8 @@ void Game::Initialise()
 	//initialise offset curves for the track
 	m_pCatmullRom->CreateOffsetCurves();
 
+	m_pCatmullRom->CreateTrack();
+
 }
 
 // Render method runs repeatedly in a loop
@@ -292,6 +294,15 @@ void Game::Render()
 		m_pCatmullRom->RenderOffsetCurves();
 	modelViewMatrixStack.Pop();
 
+	//Render path
+	modelViewMatrixStack.Push();
+		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCatmullRom->RenderTrack();
+	modelViewMatrixStack.Pop();
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	// Use the tunnel shader program 
@@ -332,7 +343,7 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt);
+	m_pCamera->Update(m_dt);
 	 
 	m_pAudio->Update();
 
@@ -352,7 +363,7 @@ void Game::Update()
 	tMag = sqrt((t.x * t.x) + (t.y * t.y) + (t.z * t.z));
 	t = t / tMag;
 	//set the camera following the path defined above, looking up that the object, with an upvector in the y direction
-	m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
+	//m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
 	
 	
 }
