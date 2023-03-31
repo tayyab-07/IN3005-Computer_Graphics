@@ -18,6 +18,7 @@ class COpenAssetImportMesh;
 class CAudio;
 class CCatmullRom;
 class CTunnel;
+class CHeightMapTerrain;
 
 class Game {
 private:
@@ -38,7 +39,8 @@ private:
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom *m_pCatmullRom;
-	CTunnel* m_pTunnel;
+	CTunnel *m_pTunnel;
+	CHeightMapTerrain *m_pHeightMapTerrain;
 
 	// Some other member variables
 	double m_dt;

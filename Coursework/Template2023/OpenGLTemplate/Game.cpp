@@ -43,6 +43,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "Audio.h"
 #include "CatmullRom.h"
 #include "Tunnel.h"
+#include "HeightMapTerrain.h"
 
 // Constructor
 Game::Game()
@@ -59,6 +60,7 @@ Game::Game()
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
 	m_pTunnel = NULL;
+	m_pHeightMapTerrain = NULL;
 
 	m_dt = 0.0;
 	m_framesPerSecond = 0;
@@ -82,6 +84,7 @@ Game::~Game()
 	delete m_pAudio;
 	delete m_pCatmullRom;
 	delete m_pTunnel;
+	delete m_pHeightMapTerrain;
 
 	if (m_pShaderPrograms != NULL) {
 		for (unsigned int i = 0; i < m_pShaderPrograms->size(); i++)
@@ -112,7 +115,7 @@ void Game::Initialise()
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 	m_pTunnel = new CTunnel;
-
+	m_pHeightMapTerrain = new CHeightMapTerrain;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
 
@@ -178,7 +181,9 @@ void Game::Initialise()
 	m_pSkybox->Create(2500.0f);
 	
 	// Create the planar terrain
-	m_pPlanarTerrain->Create("resources\\textures\\", "grassfloor01.jpg", 2000.0f, 2000.0f, 50.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+	//m_pPlanarTerrain->Create("resources\\textures\\", "grassfloor01.jpg", 2000.0f, 2000.0f, 50.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
+
+	m_pHeightMapTerrain->Create("resources\\textures\\terrainNew1.bmp", "resources\\textures\\GrassBright.bmp", glm::vec3(0, 0, 0), 2000.0f, 2000.0f, 100.f);
 
 	m_pFtFont->LoadSystemFont("arial.ttf", 32);
 	m_pFtFont->SetShaderProgram(pFontProgram);
@@ -268,7 +273,15 @@ void Game::Render()
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		m_pPlanarTerrain->Render();
+		//m_pPlanarTerrain->Render();
+	modelViewMatrixStack.Pop();
+
+	// Render the new terrain
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		m_pHeightMapTerrain->Render();
 	modelViewMatrixStack.Pop();
 
 
@@ -324,7 +337,22 @@ void Game::Render()
 
 	// Render the tunnel
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(glm::vec3(-6, 0, 5));
+		modelViewMatrixStack.Scale(10.0f);
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(90.0f));
+		modelViewMatrixStack.Translate(glm::vec3(84, 8, 28));
+		modelViewMatrixStack.Scale(glm::vec3(1,1,5));
+		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// To turn off texture mapping and use the tunnel colour only, uncomment the next line
+		//pTunnelProgram->SetUniform("bUseTexture", false);
+		m_pTunnel->Render();
+	modelViewMatrixStack.Pop();
+
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Scale(10.0f);
+		modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), glm::radians(180.0f));
+		modelViewMatrixStack.Translate(glm::vec3(84, 8, 28));
+		modelViewMatrixStack.Scale(glm::vec3(1, 1, 5));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// To turn off texture mapping and use the tunnel colour only, uncomment the next line
