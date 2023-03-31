@@ -17,7 +17,7 @@ public:
 	void CreateOffsetCurves();
 	void RenderOffsetCurves();
 
-	void CreateTrack();
+	void CreateTrack(string sDirectory, string sFilename, float fTextureRepeat);
 	void RenderTrack();
 
 	int CurrentLap(float d); // Return the currvent lap (starting from 0) based on distance along the control curve.
@@ -38,7 +38,6 @@ private:
 	GLuint m_vaoCentreline;
 	GLuint m_vaoLeftOffsetCurve;
 	GLuint m_vaoRightOffsetCurve;
-	//GLuint m_vaoOffsetCurves;
 	GLuint m_vaoTrack;
 
 	static glm::vec3 _dummy_vector;
@@ -52,6 +51,10 @@ private:
 
 
 	unsigned int m_vertexCount;				// Number of vertices in the track VBO
-	//int m_vertexCount;				// Number of vertices in the track VBO
+
+	int sampleNum = 1000;					// Number of uniformly created smaples stored in a variable for ease of use
+
+	string m_directory;
+	string m_filename;
 
 };

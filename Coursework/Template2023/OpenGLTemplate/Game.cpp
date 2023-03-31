@@ -206,7 +206,8 @@ void Game::Initialise()
 	//initialise offset curves for the track
 	m_pCatmullRom->CreateOffsetCurves();
 
-	m_pCatmullRom->CreateTrack();
+	//initialise track, with texture
+	m_pCatmullRom->CreateTrack("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f); //from https://opengameart.org/content/black-asphalt-tilling-256px
 
 }
 
@@ -276,27 +277,27 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 
-	//Render path
+	//Render the centre line for the track
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
-		m_pCatmullRom->RenderCentreline();
+		//m_pCatmullRom->RenderCentreline();
 	modelViewMatrixStack.Pop();
 
-	//Render path
+	//Render offset curves for the track
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
-		m_pCatmullRom->RenderOffsetCurves();
+		//m_pCatmullRom->RenderOffsetCurves();
 	modelViewMatrixStack.Pop();
 
-	//Render path
+	//Render trcak itself and enable textures
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
+		pMainProgram->SetUniform("bUseTexture", true); // turn off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
@@ -364,8 +365,6 @@ void Game::Update()
 	t = t / tMag;
 	//set the camera following the path defined above, looking up that the object, with an upvector in the y direction
 	//m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
-	
-	
 }
 
 
