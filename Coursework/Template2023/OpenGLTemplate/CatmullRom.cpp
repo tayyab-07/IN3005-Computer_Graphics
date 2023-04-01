@@ -2,11 +2,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-
-
 CCatmullRom::CCatmullRom()
 {
 	m_vertexCount = 0;
+	m_barricadeCount = 0;
 }
 
 CCatmullRom::~CCatmullRom()
@@ -68,10 +67,9 @@ void CCatmullRom::SetControlPoints()
 	m_controlPoints.push_back(glm::vec3(600, 95, 350));
 	m_controlPoints.push_back(glm::vec3(800, 100, 200));
 
-
+	
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// UP VECTORS
-	// Up vectors for each point above
+	// UP VECTORS for each point above
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 	m_controlUpVectors.push_back(glm::vec3(-0.2, 1, 0));
@@ -109,9 +107,7 @@ void CCatmullRom::SetControlPoints()
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
 	m_controlUpVectors.push_back(glm::vec3(0, 1, 0));
-	
 }
-
 
 // Determine lengths along the control points, which is the set of control points forming the closed curve
 void CCatmullRom::ComputeLengthsAlongControlPoints()
@@ -129,7 +125,6 @@ void CCatmullRom::ComputeLengthsAlongControlPoints()
 	fAccumulatedLength += glm::distance(m_controlPoints[M-1], m_controlPoints[0]);
 	m_distances.push_back(fAccumulatedLength);
 }
-
 
 // Return the point (and upvector, if control upvectors provided) based on a distance d along the control polygon
 bool CCatmullRom::Sample(float d, glm::vec3 &p, glm::vec3 &up)
@@ -242,6 +237,7 @@ void CCatmullRom::CreateCentreline()
 		vbo.AddData(&texCoord, sizeof(glm::vec2));
 		vbo.AddData(&m_centrelineUpVectors[i], sizeof(glm::vec3));
 	}
+
 	// Upload the VBO to the GPU
 	vbo.UploadDataToGPU(GL_STATIC_DRAW);
 	// Set the vertex attribute locations
@@ -272,7 +268,7 @@ void CCatmullRom::CreateOffsetCurves()
 		glm::vec3 up = m_centrelineUpVectors[i];
 		glm::vec3 pNext = m_centrelinePoints[(i + 1) % sampleNum];
 		glm::vec3 t = normalize(pNext - p);
-		glm::vec3 n = glm::vec3((t.y*up.z)-(t.z*up.y), (t.z*up.x)-(t.x*up.z), (t.x*up.y)-(t.y*up.x));
+		glm::vec3 n = glm::vec3 (glm::cross(t, up));
 
 		m_leftOffsetPoints.push_back(p - ((w/2) * n));
 		m_rightOffsetPoints.push_back(p + ((w/2) * n));
@@ -412,6 +408,157 @@ void CCatmullRom::CreateTrack(string directory, string filename, float textureRe
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
 }
 
+void CCatmullRom::CreateLeftBarricade(string directory, string filename, float textureRepeat)
+{
+	// Load the texture
+	m_texture.Load(directory + filename, true);
+	m_directory = directory;
+	m_filename = filename;
+
+	// Set parameters for texturing using sampler object
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	float barricadeHeight = 20;
+
+	for (int i = 0; i < m_leftOffsetPoints.size(); i++)
+	{
+		glm::vec3 p = m_leftOffsetPoints[i];
+		glm::vec3 up = m_centrelineUpVectors[i];
+		glm::vec3 pNext = m_leftOffsetPoints[(i + 1) % m_leftOffsetPoints.size()];
+		glm::vec3 t = normalize(pNext - p);
+		glm::vec3 n = normalize(glm::vec3(glm::cross(t, up)));
+		glm::vec3 b = normalize(glm::vec3(glm::cross(n, t)));
+
+		m_leftBarricadePoints.push_back(p + (barricadeHeight * b));
+		m_leftBarricadeNormals.push_back(n);
+	}
+
+	glGenVertexArrays(1, &m_vaoLeftBarricade);
+	glBindVertexArray(m_vaoLeftBarricade);
+
+	CVertexBufferObject vbo;
+	vbo.Create();
+	vbo.Bind();
+
+	// Texture coordinates store in an array
+	// right side of the texture pattern repeated
+	glm::vec2 texCoord[4]
+	{
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(textureRepeat, 0.0f),
+		glm::vec2(textureRepeat, 1.0f)
+	};
+
+	for (int i = 0; i < m_leftOffsetPoints.size() + 1; i++)
+	{  
+
+		glm::vec3 p = m_leftOffsetPoints[i % m_leftOffsetPoints.size()];
+		vbo.AddData(&p, sizeof(glm::vec3));
+		vbo.AddData(&texCoord[i % 2], sizeof(glm::vec2));
+		vbo.AddData(&m_leftBarricadeNormals[i % m_leftBarricadeNormals.size()], sizeof(glm::vec3));
+
+		glm::vec3 q = m_leftBarricadePoints[i % m_leftBarricadePoints.size()];
+		vbo.AddData(&q, sizeof(glm::vec3));
+		vbo.AddData(&texCoord[(i % 2) + 2], sizeof(glm::vec2));
+		vbo.AddData(&m_leftBarricadeNormals[i % m_leftBarricadeNormals.size()], sizeof(glm::vec3));
+		
+		m_barricadeCount = m_barricadeCount + 2;
+	}
+
+	// Set the vertex attribute locations
+	GLsizei stride = 2 * sizeof(glm::vec3) + sizeof(glm::vec2);
+	// Upload the VBO to the GPU
+	vbo.UploadDataToGPU(GL_STATIC_DRAW);
+	// Vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+	// Texture coordinates
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)sizeof(glm::vec3));
+	// Normal vectors
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
+
+}
+
+void CCatmullRom::CreateRightBarricade(string directory, string filename, float textureRepeat)
+{
+	// Load the texture
+	m_texture.Load(directory + filename, true);
+	m_directory = directory;
+	m_filename = filename;
+
+	// Set parameters for texturing using sampler object
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
+	m_texture.SetSamplerObjectParameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	float barricadeHeight = 20;
+
+	for (int i = 0; i < m_rightOffsetPoints.size(); i++)
+	{
+		glm::vec3 p = m_rightOffsetPoints[i];
+		glm::vec3 up = m_centrelineUpVectors[i];
+		glm::vec3 pNext = m_rightOffsetPoints[(i + 1) % m_rightOffsetPoints.size()];
+		glm::vec3 t = normalize(pNext - p);
+		glm::vec3 n = normalize(glm::vec3(glm::cross(t, up)));
+		glm::vec3 b = normalize(glm::vec3(glm::cross(n, t)));
+
+		m_rightBarricadePoints.push_back(p + (barricadeHeight * b));
+		m_rightBarricadeNormals.push_back(n);
+	}
+
+	glGenVertexArrays(1, &m_vaoRightBarricade);
+	glBindVertexArray(m_vaoRightBarricade);
+
+	CVertexBufferObject vbo;
+	vbo.Create();
+	vbo.Bind();
+
+	// Texture coordinates store in an array
+	// right side of the texture pattern repeated
+	glm::vec2 texCoord[4]
+	{
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(textureRepeat, 0.0f),
+		glm::vec2(textureRepeat, 1.0f)
+	};
+
+	for (int i = 0; i < m_rightOffsetPoints.size() + 1; i++)
+	{
+
+		glm::vec3 p = m_rightOffsetPoints[i % m_rightOffsetPoints.size()];
+		vbo.AddData(&p, sizeof(glm::vec3));
+		vbo.AddData(&texCoord[i % 2], sizeof(glm::vec2));
+		vbo.AddData(&m_rightBarricadeNormals[i % m_rightBarricadeNormals.size()], sizeof(glm::vec3));
+
+		glm::vec3 q = m_rightBarricadePoints[i % m_rightBarricadePoints.size()];
+		vbo.AddData(&q, sizeof(glm::vec3));
+		vbo.AddData(&texCoord[(i % 2) + 2], sizeof(glm::vec2));
+		vbo.AddData(&m_rightBarricadeNormals[i % m_rightBarricadeNormals.size()], sizeof(glm::vec3));
+	}
+
+	// Set the vertex attribute locations
+	GLsizei stride = 2 * sizeof(glm::vec3) + sizeof(glm::vec2);
+	// Upload the VBO to the GPU
+	vbo.UploadDataToGPU(GL_STATIC_DRAW);
+	// Vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+	// Texture coordinates
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)sizeof(glm::vec3));
+	// Normal vectors
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
+
+}
 
 void CCatmullRom::RenderCentreline()
 {
@@ -457,6 +604,17 @@ void CCatmullRom::RenderTrack()
 	glBindVertexArray(m_vaoTrack);
 	m_texture.Bind();
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, m_vertexCount);
+}
+
+void CCatmullRom::RenderBarricades()
+{
+	glBindVertexArray(m_vaoLeftBarricade);
+	m_texture.Bind();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, m_barricadeCount);
+
+	glBindVertexArray(m_vaoRightBarricade);
+	m_texture.Bind();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, m_barricadeCount);
 }
 
 int CCatmullRom::CurrentLap(float d)

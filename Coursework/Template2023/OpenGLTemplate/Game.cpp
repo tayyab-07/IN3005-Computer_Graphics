@@ -214,6 +214,10 @@ void Game::Initialise()
 	//initialise track, with texture
 	m_pCatmullRom->CreateTrack("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f); //from https://opengameart.org/content/black-asphalt-tilling-256px
 
+	glDisable(GL_CULL_FACE);
+	m_pCatmullRom->CreateLeftBarricade("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f);
+	m_pCatmullRom->CreateRightBarricade("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f);
+
 }
 
 // Render method runs repeatedly in a loop
@@ -292,7 +296,7 @@ void Game::Render()
 
 	//Render the centre line for the track
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
+		pMainProgram->SetUniform("bUseTexture", false); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
@@ -301,7 +305,7 @@ void Game::Render()
 
 	//Render offset curves for the track
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", false); // turn off texturing
+		pMainProgram->SetUniform("bUseTexture", false); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
@@ -310,11 +314,20 @@ void Game::Render()
 
 	//Render trcak itself and enable textures
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", true); // turn off texturing
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
 		m_pCatmullRom->RenderTrack();
+	modelViewMatrixStack.Pop();
+
+	//Render trcak itself and enable textures
+	modelViewMatrixStack.Push();
+		pMainProgram->SetUniform("bUseTexture", false); // turn on/off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCatmullRom->RenderBarricades();
 	modelViewMatrixStack.Pop();
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +350,7 @@ void Game::Render()
 
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(300,85,-850));
-		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(90.f));
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(91.f));
 		modelViewMatrixStack.Scale(glm::vec3(10,10,50));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -369,15 +382,14 @@ void Game::Render()
 void Game::Update() 
 {
 	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	m_pCamera->Update(m_dt);
+	//m_pCamera->Update(m_dt);
 	 
 	m_pAudio->Update();
 
 	// code to set the camera along the path
-	
-	//increment distance by time elapsed, then pass this value to sample function to move camera
+	// increment distance by time elapsed, then pass this value to sample function to move camera
 	m_currentDistance = m_currentDistance + m_dt * 0.2;
-	//increment distance by m_camera speed which could be incremented based on KBM controls
+	// increment distance by m_camera speed which could be incremented based on KBM controls
 	//m_currentDistance = m_currentDistance + m_dt * m_cameraSpeed;
 	glm::vec3 p;
 	m_pCatmullRom->Sample(m_currentDistance, p);
@@ -388,10 +400,9 @@ void Game::Update()
 	float tMag;
 	tMag = sqrt((t.x * t.x) + (t.y * t.y) + (t.z * t.z));
 	t = t / tMag;
-	//set the camera following the path defined above, looking up that the object, with an upvector in the y direction
-	//m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
+	// set the camera following the path defined above, looking up that the object, with an upvector in the y direction
+	m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
 }
-
 
 
 void Game::DisplayFrameRate()
