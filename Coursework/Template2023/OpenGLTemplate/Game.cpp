@@ -203,7 +203,7 @@ void Game::Initialise()
 	m_pAudio->PlayMusicStream();
 
 	//tunnel texture downloaded from: https://opengameart.org/node/7651 on 11th Mar 2023
-	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg");
+	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg", 5.0f);
 
 	//initialise centreline for the track
 	m_pCatmullRom->CreateCentreline();
@@ -335,12 +335,10 @@ void Game::Render()
 	pTunnelProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
 	pTunnelProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 
-	// Render the tunnel
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Scale(10.0f);
-		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(90.0f));
-		modelViewMatrixStack.Translate(glm::vec3(84, 8, 28));
-		modelViewMatrixStack.Scale(glm::vec3(1,1,5));
+		modelViewMatrixStack.Translate(glm::vec3(300,85,-850));
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(90.f));
+		modelViewMatrixStack.Scale(glm::vec3(10,10,50));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// To turn off texture mapping and use the tunnel colour only, uncomment the next line
@@ -349,10 +347,9 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 
 	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Scale(10.0f);
-		modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), glm::radians(180.0f));
-		modelViewMatrixStack.Translate(glm::vec3(84, 8, 28));
-		modelViewMatrixStack.Scale(glm::vec3(1, 1, 5));
+		modelViewMatrixStack.Translate(glm::vec3(-790, 20, 685));
+		modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), glm::radians(-16.f));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 45));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// To turn off texture mapping and use the tunnel colour only, uncomment the next line

@@ -10,7 +10,7 @@ CTunnel::~CTunnel()
 	Release();
 }
 
-void CTunnel::Create(string filename)
+void CTunnel::Create(string filename, float textureRepeat)
 {
 	// loads the textures for the tunnel
 	m_tTexture.Load(filename);

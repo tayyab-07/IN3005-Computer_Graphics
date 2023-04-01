@@ -117,11 +117,11 @@ void CCamera::TranslateByKeyboard(double dt)
 	}
 
 	if (GetKeyState(VK_LEFT) & 0x80 || GetKeyState('A') & 0x80) {
-		Strafe(-5.0*dt);
+		Strafe(-10.0*dt);
 	}
 
 	if (GetKeyState(VK_RIGHT) & 0x80 || GetKeyState('D') & 0x80) {
-		Strafe(5.0*dt);
+		Strafe(10.0*dt);
 	}
 }
 // Return the camera position

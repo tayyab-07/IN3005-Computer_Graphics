@@ -13,7 +13,7 @@ public:
 	~CTunnel();
 
 	//funtions for the tunnel
-	void Create(string filename);
+	void Create(string filename, float fTextureRepeat);
 	void Render();
 	void Release();
 
