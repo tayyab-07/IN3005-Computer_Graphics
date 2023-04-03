@@ -23,9 +23,7 @@ Source code drawn from a number of sources and examples, including contributions
 
 */
 
-
 #include "game.h"
-
 
 // Setup includes
 #include "HighResolutionTimer.h"
@@ -42,6 +40,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "OpenAssetImportMesh.h"
 #include "Audio.h"
 #include "CatmullRom.h"
+#include "BarricadeSpline.h"
 #include "Tunnel.h"
 #include "HeightMapTerrain.h"
 
@@ -55,10 +54,12 @@ Game::Game()
 	m_pFtFont = NULL;
 	m_pBarrelMesh = NULL;
 	m_pHorseMesh = NULL;
+	m_pPlayerCarMesh = NULL;
 	m_pSphere = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
+	m_pBarricadeSpline = NULL;
 	m_pTunnel = NULL;
 	m_pHeightMapTerrain = NULL;
 
@@ -67,7 +68,9 @@ Game::Game()
 	m_frameCount = 0;
 	m_elapsedTime = 0.0f;
 	m_currentDistance = 0.0f;
-	m_cameraSpeed = 0.0f;
+
+	m_playerPosition = glm::vec3(0);
+	m_playerOrientation = glm::mat4(1);
 }
 
 // Destructor
@@ -80,9 +83,11 @@ Game::~Game()
 	delete m_pFtFont;
 	delete m_pBarrelMesh;
 	delete m_pHorseMesh;
+	delete m_pPlayerCarMesh;
 	delete m_pSphere;
 	delete m_pAudio;
 	delete m_pCatmullRom;
+	delete m_pBarricadeSpline;
 	delete m_pTunnel;
 	delete m_pHeightMapTerrain;
 
@@ -111,9 +116,11 @@ void Game::Initialise()
 	m_pFtFont = new CFreeTypeFont;
 	m_pBarrelMesh = new COpenAssetImportMesh;
 	m_pHorseMesh = new COpenAssetImportMesh;
+	m_pPlayerCarMesh = new COpenAssetImportMesh;
 	m_pSphere = new CSphere;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
+	m_pBarricadeSpline = new CBarricadeSpline;
 	m_pTunnel = new CTunnel;
 	m_pHeightMapTerrain = new CHeightMapTerrain;
 
@@ -127,7 +134,7 @@ void Game::Initialise()
 	m_pCamera->SetPerspectiveProjectionMatrix(45.0f, (float) width / (float) height, 0.1f, 5000.0f);
 
 	// Load shaders
-	//Added 2 new shaders at the bottom for my tunnel object
+	// Added 2 new shaders at the bottom for my tunnel object
 	vector<CShader> shShaders;
 	vector<string> sShaderFileNames;
 	sShaderFileNames.push_back("mainShader.vert");
@@ -177,13 +184,12 @@ void Game::Initialise()
 	// You can follow this pattern to load additional shaders
 
 	// Create the skybox
-	// Skybox downloaded from http://www.akimbo.in/forum/viewtopic.php?f=10&t=9
+	// Skybox downloaded from https://opengameart.org/content/mountain-skyboxes
 	m_pSkybox->Create(2500.0f);
-	
-	// Create the planar terrain
-	//m_pPlanarTerrain->Create("resources\\textures\\", "grassfloor01.jpg", 2000.0f, 2000.0f, 50.0f); // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 
-	m_pHeightMapTerrain->Create("resources\\textures\\terrainNew1.bmp", "resources\\textures\\GrassBright.bmp", glm::vec3(0, 0, 0), 2000.0f, 2000.0f, 100.f);
+	// The height map was created by myself
+	// The grass texture is from: https://opengameart.org/content/grass-texture-0 downloaded on 3rd Apr 2023
+	m_pHeightMapTerrain->Create("resources\\textures\\terrainNew1.bmp", "resources\\textures\\grass3.png", glm::vec3(0, 0, 0), 2000.0f, 2000.0f, 75.f);
 
 	m_pFtFont->LoadSystemFont("arial.ttf", 32);
 	m_pFtFont->SetShaderProgram(pFontProgram);
@@ -191,39 +197,40 @@ void Game::Initialise()
 	// Load some meshes in OBJ format
 	m_pBarrelMesh->Load("resources\\models\\Barrel\\Barrel02.obj");  // Downloaded from http://www.psionicgames.com/?page_id=24 on 24 Jan 2013
 	m_pHorseMesh->Load("resources\\models\\Horse\\Horse2.obj");  // Downloaded from http://opengameart.org/content/horse-lowpoly on 24 Jan 2013
+	m_pPlayerCarMesh->Load("resources\\models\\Cars\\obj\\car-coupe-blue.obj"); // downloaded from: https://opengameart.org/content/vehicles-assets-pt1
 
 	// Create a sphere
 	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 
 	// Initialise audio and play background music
-	m_pAudio->Initialise();
-	m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");					// Royalty free sound from freesound.org
+	//m_pAudio->Initialise();
+	//m_pAudio->LoadEventSound("resources\\Audio\\Boing.wav");					// Royalty free sound from freesound.org
 	//m_pAudio->LoadMusicStream("resources\\Audio\\DST-Garote.mp3");	// Royalty free music from http://www.nosoapradio.us/
-	m_pAudio->PlayMusicStream();
+	//m_pAudio->PlayMusicStream();
 
 	//tunnel texture downloaded from: https://opengameart.org/node/7651 on 11th Mar 2023
 	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg", 5.0f);
 
 	//initialise centreline for the track
 	m_pCatmullRom->CreateCentreline();
-
 	//initialise offset curves for the track
 	m_pCatmullRom->CreateOffsetCurves();
-
 	//initialise track, with texture
-	m_pCatmullRom->CreateTrack("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f); //from https://opengameart.org/content/black-asphalt-tilling-256px
+	m_pCatmullRom->CreateTrack("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f); // from https://opengameart.org/content/black-asphalt-tilling-256px
 
-	glDisable(GL_CULL_FACE);
-	m_pCatmullRom->CreateLeftBarricade("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f);
-	m_pCatmullRom->CreateRightBarricade("resources\\textures\\", "01tizeta_asphalts2.png", 0.1f);
-
+	// Due to the fact that only 1 texture can be applied for an object of one class, 
+	// i decided to create another almost identical catmullRom spline class to create the barricades
+	// this will let me give the barricades a different texture to the track
+	m_pBarricadeSpline->CreateCentreline();
+	m_pBarricadeSpline->CreateOffsetCurves();
+	m_pBarricadeSpline->CreateLeftBarricade("resources\\textures\\", "doortile.png", 0.1f); // from https://opengameart.org/content/seamless-metal-door-texture
+	m_pBarricadeSpline->CreateRightBarricade("resources\\textures\\", "doortile.png", 0.1f); // from https://opengameart.org/content/seamless-metal-door-texture
 }
 
 // Render method runs repeatedly in a loop
 void Game::Render() 
 {
-	
 	// Clear the buffers and enable depth testing (z-buffering)
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
@@ -251,7 +258,7 @@ void Game::Render()
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
 
 	// Set light and materials in main shader program
-	glm::vec4 lightPosition1 = glm::vec4(-100, 100, -100, 1); // Position of light source *in world coordinates*
+	glm::vec4 lightPosition1 = glm::vec4(0, 100, -1500, 1); // Position of light source *in world coordinates*
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
@@ -273,14 +280,7 @@ void Game::Render()
 		pMainProgram->SetUniform("renderSkybox", false);
 	modelViewMatrixStack.Pop();
 
-	// Render the planar terrain
-	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		//m_pPlanarTerrain->Render();
-	modelViewMatrixStack.Pop();
-
-	// Render the new terrain
+	// Render the height mapped terrain
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(0.0f, 0.0f, 0.0f));
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -288,31 +288,24 @@ void Game::Render()
 		m_pHeightMapTerrain->Render();
 	modelViewMatrixStack.Pop();
 
-
 	// Turn on diffuse + specular materials
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 
-	//Render the centre line for the track
+	//Render the track
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", false); // turn on/off texturing
+		modelViewMatrixStack.Translate(m_playerPosition);
+		modelViewMatrixStack *= m_playerOrientation;
+		modelViewMatrixStack.Scale(glm::vec3(2));
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
-		//m_pCatmullRom->RenderCentreline();
+		m_pPlayerCarMesh->Render();
 	modelViewMatrixStack.Pop();
 
-	//Render offset curves for the track
-	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", false); // turn on/off texturing
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// Render your object here
-		//m_pCatmullRom->RenderOffsetCurves();
-	modelViewMatrixStack.Pop();
-
-	//Render trcak itself and enable textures
+	//Render the track
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -321,17 +314,16 @@ void Game::Render()
 		m_pCatmullRom->RenderTrack();
 	modelViewMatrixStack.Pop();
 
-	//Render trcak itself and enable textures
+	//Renderthe barricades
 	modelViewMatrixStack.Push();
-		pMainProgram->SetUniform("bUseTexture", false); // turn on/off texturing
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
-		m_pCatmullRom->RenderBarricades();
+		m_pBarricadeSpline->RenderBarricades();
 	modelViewMatrixStack.Pop();
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	// Use the tunnel shader program 
 	CShaderProgram *pTunnelProgram = (*m_pShaderPrograms)[2];
 	pTunnelProgram->UseProgram();
@@ -348,25 +340,25 @@ void Game::Render()
 	pTunnelProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
 	pTunnelProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 
+	// render tunnel after turn 1
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(300,85,-850));
 		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(91.f));
 		modelViewMatrixStack.Scale(glm::vec3(10,10,50));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// To turn off texture mapping and use the tunnel colour only, uncomment the next line
-		//pTunnelProgram->SetUniform("bUseTexture", false);
+		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		m_pTunnel->Render();
 	modelViewMatrixStack.Pop();
 
+	// render tunnel after hairpin
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(-790, 20, 685));
 		modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), glm::radians(-16.f));
 		modelViewMatrixStack.Scale(glm::vec3(10, 10, 45));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// To turn off texture mapping and use the tunnel colour only, uncomment the next line
-		//pTunnelProgram->SetUniform("bUseTexture", false);
+		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		m_pTunnel->Render();
 	modelViewMatrixStack.Pop();
 		
@@ -389,19 +381,19 @@ void Game::Update()
 	// code to set the camera along the path
 	// increment distance by time elapsed, then pass this value to sample function to move camera
 	m_currentDistance = m_currentDistance + m_dt * 0.2;
-	// increment distance by m_camera speed which could be incremented based on KBM controls
-	//m_currentDistance = m_currentDistance + m_dt * m_cameraSpeed;
 	glm::vec3 p;
 	m_pCatmullRom->Sample(m_currentDistance, p);
 	glm::vec3 pNext;
 	m_pCatmullRom->Sample(m_currentDistance + 1, pNext);
-	glm::vec3 t;
-	t = (pNext - p);
-	float tMag;
-	tMag = sqrt((t.x * t.x) + (t.y * t.y) + (t.z * t.z));
-	t = t / tMag;
-	// set the camera following the path defined above, looking up that the object, with an upvector in the y direction
-	m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
+	glm::vec3 t = normalize(pNext - p);
+	// set the camera following the path defined above, looking at the track, with an upvector in the y direction
+	//m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
+
+	m_pCamera->Set(m_playerPosition - glm::vec3(75, -25, 0), m_playerPosition + glm::vec3(100,0,0), glm::vec3(0, 1, 0));
+	m_playerPosition = m_playerPosition;
+
+	//COLLISION DETECTION
+	
 }
 
 
@@ -456,8 +448,6 @@ void Game::GameLoop()
 	Update();
 	Render();
 	m_dt = m_pHighResolutionTimer->Elapsed();
-	
-
 }
 
 
@@ -541,6 +531,9 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 			break;
 		case VK_F1:
 			m_pAudio->PlayEventSound();
+			break;
+		case 'W':
+			m_playerPosition.x = m_playerPosition.x + 1;
 			break;
 		}
 		break;

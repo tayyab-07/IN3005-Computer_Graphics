@@ -1,3 +1,3 @@
 ﻿  Game.cpp
-C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(391,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(383,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   OpenGLTemplate.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\x64\Debug\OpenGLTemplate.exe

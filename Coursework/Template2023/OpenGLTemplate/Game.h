@@ -17,6 +17,7 @@ class CSphere;
 class COpenAssetImportMesh;
 class CAudio;
 class CCatmullRom;
+class CBarricadeSpline;
 class CTunnel;
 class CHeightMapTerrain;
 
@@ -35,10 +36,12 @@ private:
 	CFreeTypeFont *m_pFtFont;
 	COpenAssetImportMesh *m_pBarrelMesh;
 	COpenAssetImportMesh *m_pHorseMesh;
+	COpenAssetImportMesh *m_pPlayerCarMesh;
 	CSphere *m_pSphere;
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom *m_pCatmullRom;
+	CBarricadeSpline *m_pBarricadeSpline;
 	CTunnel *m_pTunnel;
 	CHeightMapTerrain *m_pHeightMapTerrain;
 
@@ -49,6 +52,8 @@ private:
 	float m_currentDistance;
 	float m_cameraSpeed;
 
+	glm::vec3 m_playerPosition;
+	glm::mat4 m_playerOrientation;
 
 public:
 	Game();

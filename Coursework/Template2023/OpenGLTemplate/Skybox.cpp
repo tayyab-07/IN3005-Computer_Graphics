@@ -13,13 +13,11 @@ CSkybox::~CSkybox()
 // Create a skybox of a given size with six textures
 void CSkybox::Create(float size)
 {
+	//skybox texture from: https://opengameart.org/content/mountain-skyboxes
+	m_cubemapTexture.Create("resources\\skyboxes\\Nalovardo\\flipped\\right.jpg", "resources\\skyboxes\\Nalovardo\\flipped\\left.jpg",
+		"resources\\skyboxes\\Nalovardo\\flipped\\up.jpg", "resources\\skyboxes\\Nalovardo\\flipped\\down.jpg",
+		"resources\\skyboxes\\Nalovardo\\flipped\\back.jpg", "resources\\skyboxes\\Nalovardo\\flipped\\front.jpg");
 
-	m_cubemapTexture.Create("resources\\skyboxes\\jajdarkland1\\flipped\\jajdarkland1_rt.jpg", "resources\\skyboxes\\jajdarkland1\\flipped\\jajdarkland1_lf.jpg",
-		"resources\\skyboxes\\jajdarkland1\\flipped\\jajdarkland1_up.jpg", "resources\\skyboxes\\jajdarkland1\\flipped\\jajdarkland1_dn.jpg",
-		"resources\\skyboxes\\jajdarkland1\\flipped\\jajdarkland1_bk.jpg", "resources\\skyboxes\\jajdarkland1\\flipped\\jajdarkland1_ft.jpg");
-
-	
-	
 	glGenVertexArrays(1, &m_vao);
 	glBindVertexArray(m_vao);
 
