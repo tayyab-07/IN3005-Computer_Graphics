@@ -46,11 +46,13 @@ private:
 	CHeightMapTerrain *m_pHeightMapTerrain;
 
 	// Some other member variables
-	double m_dt;
+	float m_dt;
 	int m_framesPerSecond;
 	bool m_appActive;
 	float m_currentDistance;
 	float m_cameraSpeed;
+	float m_carTurn;
+	float m_carRotation;
 
 	glm::vec3 m_playerPosition;
 	glm::mat4 m_playerOrientation;

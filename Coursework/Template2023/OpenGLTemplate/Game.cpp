@@ -68,6 +68,9 @@ Game::Game()
 	m_frameCount = 0;
 	m_elapsedTime = 0.0f;
 	m_currentDistance = 0.0f;
+	m_cameraSpeed = 0.0f;
+	m_carTurn = 0.0f;
+	m_carRotation = 0.0f;
 
 	m_playerPosition = glm::vec3(0);
 	m_playerOrientation = glm::mat4(1);
@@ -297,7 +300,8 @@ void Game::Render()
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(m_playerPosition);
 		modelViewMatrixStack *= m_playerOrientation;
-		modelViewMatrixStack.Scale(glm::vec3(2));
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(m_carRotation));
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -380,17 +384,26 @@ void Game::Update()
 
 	// code to set the camera along the path
 	// increment distance by time elapsed, then pass this value to sample function to move camera
-	m_currentDistance = m_currentDistance + m_dt * 0.2;
-	glm::vec3 p;
-	m_pCatmullRom->Sample(m_currentDistance, p);
-	glm::vec3 pNext;
-	m_pCatmullRom->Sample(m_currentDistance + 1, pNext);
+	//m_currentDistance = m_currentDistance + m_dt * 0.2;
+	m_currentDistance = m_currentDistance + (m_dt * m_cameraSpeed);
+	glm::vec3 p, up;
+	m_pCatmullRom->Sample(m_currentDistance, p, up);
+	glm::vec3 pNext, upNext;
+	m_pCatmullRom->Sample(m_currentDistance + 1, pNext, upNext);
 	glm::vec3 t = normalize(pNext - p);
-	// set the camera following the path defined above, looking at the track, with an upvector in the y direction
-	//m_pCamera->Set(p + glm::vec3(0, 5, 0), (p + 30.f * t), glm::vec3(0, 1, 0));
+	glm::vec3 n = normalize(glm::vec3(glm::cross(t, upNext)));
+	glm::vec3 b = normalize(glm::vec3(glm::cross(n, t)));
+	// set the camera following the path defined above, looking at the track, with an upvector identical to the tracks upvector
+	//m_pCamera->Set(p + glm::vec3(0, 20, 0), (p + 50.f * t), b);
 
-	m_pCamera->Set(m_playerPosition - glm::vec3(75, -25, 0), m_playerPosition + glm::vec3(100,0,0), glm::vec3(0, 1, 0));
-	m_playerPosition = m_playerPosition;
+	m_playerPosition = p + (n * (m_carTurn));
+	m_playerOrientation = glm::mat4(glm::mat3(t, b, n));
+
+	// THIRD-PERSON CAMERA
+	m_pCamera->Set(m_playerPosition - (t * 50.0f) + glm::vec3(0,20,0), m_playerPosition + (t * 30.0f), b);
+
+	// FIRST-PERSON CAMERA
+	//m_pCamera->Set(m_playerPosition + (t * 15.0f) + glm::vec3(0,3,0), m_playerPosition + (t * 30.0f), b);
 
 	//COLLISION DETECTION
 	
@@ -486,7 +499,7 @@ WPARAM Game::Execute()
 	return(msg.wParam);
 }
 
-LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_param) 
+LRESULT Game::ProcessEvents(HWND window, UINT message, WPARAM w_param, LPARAM l_param)
 {
 	LRESULT result = 0;
 
@@ -495,24 +508,24 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 
 	case WM_ACTIVATE:
 	{
-		switch(LOWORD(w_param))
+		switch (LOWORD(w_param))
 		{
-			case WA_ACTIVE:
-			case WA_CLICKACTIVE:
-				m_appActive = true;
-				m_pHighResolutionTimer->Start();
-				break;
-			case WA_INACTIVE:
-				m_appActive = false;
-				break;
+		case WA_ACTIVE:
+		case WA_CLICKACTIVE:
+			m_appActive = true;
+			m_pHighResolutionTimer->Start();
+			break;
+		case WA_INACTIVE:
+			m_appActive = false;
+			break;
 		}
 		break;
-		}
+	}
 
 	case WM_SIZE:
-			RECT dimensions;
-			GetClientRect(window, &dimensions);
-			m_gameWindow.SetDimensions(dimensions);
+		RECT dimensions;
+		GetClientRect(window, &dimensions);
+		m_gameWindow.SetDimensions(dimensions);
 		break;
 
 	case WM_PAINT:
@@ -522,21 +535,62 @@ LRESULT Game::ProcessEvents(HWND window,UINT message, WPARAM w_param, LPARAM l_p
 		break;
 
 	case WM_KEYDOWN:
-		switch(w_param) {
+		switch (w_param) {
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
 		case '1':
 			m_pAudio->PlayEventSound();
+			//m_pCamera->Set(m_playerPosition + (t * 15.0f) + glm::vec3(0, 3, 0), m_playerPosition + (t * 30.0f), b);
 			break;
 		case VK_F1:
 			m_pAudio->PlayEventSound();
 			break;
 		case 'W':
-			m_playerPosition.x = m_playerPosition.x + 1;
+			if (m_cameraSpeed < 0.2f)
+			{
+				m_cameraSpeed = m_cameraSpeed + 0.001f;
+			}
+			break;
+		case 'S':
+			if (m_cameraSpeed > 0.003f)
+			{
+				m_cameraSpeed = m_cameraSpeed - 0.003f;
+			}
+			else if (m_cameraSpeed < 0.003f)
+			{
+				m_cameraSpeed = 0;
+			}
+			break;
+		case 'A':
+			if (m_carTurn > (-30.0f))
+			{
+				m_carTurn = m_carTurn - 2.0f;
+				m_carRotation = 15.0f;
+			}
+			break;
+		case 'D':
+			if (m_carTurn < 30.0f)
+			{
+				m_carTurn = m_carTurn + 2.0f;
+				m_carRotation = -15.0f;
+			}
 			break;
 		}
 		break;
+
+	case WM_KEYUP:
+		switch (w_param)
+		{
+		case 'A':
+			m_carRotation = 0.0f;
+			break;
+		case 'D':
+			m_carRotation = 0.0f;
+			break;
+		}
+		break;
+
 
 	case WM_DESTROY:
 		PostQuitMessage(0);
