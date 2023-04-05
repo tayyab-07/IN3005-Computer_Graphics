@@ -86,6 +86,9 @@
     <ClInclude Include="BarricadeSpline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Overpass.h">
+      <Filter>Header Files\BasicShapes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio.cpp">
@@ -150,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="BarricadeSpline.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Overpass.cpp">
+      <Filter>Source Files\BasicShapes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

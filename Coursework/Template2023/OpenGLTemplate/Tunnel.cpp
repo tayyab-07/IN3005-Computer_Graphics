@@ -81,7 +81,6 @@ void CTunnel::Create(string filename, float textureRepeat)
 
 	// Colour
 	// setting the colour to be used for the VBO
-	// I have only added one colour as i intend to use a texture on my object down the line
 	glm::vec3 grey = glm::vec3(0.2, 0.2, 0.2);
 	glm::vec3 white = glm::vec3(1, 1, 1);
 

@@ -19,6 +19,7 @@ class CAudio;
 class CCatmullRom;
 class CBarricadeSpline;
 class CTunnel;
+class COverpass;
 class CHeightMapTerrain;
 
 class Game {
@@ -32,17 +33,14 @@ private:
 	CSkybox *m_pSkybox;
 	CCamera *m_pCamera;
 	vector <CShaderProgram *> *m_pShaderPrograms;
-	CPlane *m_pPlanarTerrain;
 	CFreeTypeFont *m_pFtFont;
-	COpenAssetImportMesh *m_pBarrelMesh;
-	COpenAssetImportMesh *m_pHorseMesh;
 	COpenAssetImportMesh *m_pPlayerCarMesh;
-	CSphere *m_pSphere;
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom *m_pCatmullRom;
 	CBarricadeSpline *m_pBarricadeSpline;
 	CTunnel *m_pTunnel;
+	COverpass *m_pOverpass; 
 	CHeightMapTerrain *m_pHeightMapTerrain;
 
 	// Some other member variables
@@ -50,9 +48,14 @@ private:
 	int m_framesPerSecond;
 	bool m_appActive;
 	float m_currentDistance;
-	float m_cameraSpeed;
-	float m_carTurn;
-	float m_carRotation;
+
+	float m_playerSpeed;
+	float m_playerTurn;
+	float m_playerRotation;
+
+	bool freeCam;
+	bool thirdCam;
+	bool firstCam;
 
 	glm::vec3 m_playerPosition;
 	glm::mat4 m_playerOrientation;

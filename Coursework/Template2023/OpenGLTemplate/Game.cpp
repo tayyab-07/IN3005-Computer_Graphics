@@ -32,16 +32,15 @@ Source code drawn from a number of sources and examples, including contributions
 // Game includes
 #include "Camera.h"
 #include "Skybox.h"
-#include "Plane.h"
 #include "Shaders.h"
 #include "FreeTypeFont.h"
-#include "Sphere.h"
 #include "MatrixStack.h"
 #include "OpenAssetImportMesh.h"
 #include "Audio.h"
 #include "CatmullRom.h"
 #include "BarricadeSpline.h"
 #include "Tunnel.h"
+#include "Overpass.h"
 #include "HeightMapTerrain.h"
 
 // Constructor
@@ -50,17 +49,14 @@ Game::Game()
 	m_pSkybox = NULL;
 	m_pCamera = NULL;
 	m_pShaderPrograms = NULL;
-	m_pPlanarTerrain = NULL;
 	m_pFtFont = NULL;
-	m_pBarrelMesh = NULL;
-	m_pHorseMesh = NULL;
 	m_pPlayerCarMesh = NULL;
-	m_pSphere = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
 	m_pBarricadeSpline = NULL;
 	m_pTunnel = NULL;
+	m_pOverpass = NULL;
 	m_pHeightMapTerrain = NULL;
 
 	m_dt = 0.0;
@@ -68,9 +64,14 @@ Game::Game()
 	m_frameCount = 0;
 	m_elapsedTime = 0.0f;
 	m_currentDistance = 0.0f;
-	m_cameraSpeed = 0.0f;
-	m_carTurn = 0.0f;
-	m_carRotation = 0.0f;
+	m_playerSpeed = 0.0f;
+	m_playerTurn = 0.0f;
+	m_playerRotation = 0.0f;
+
+	// set third person camera to true to start game on that camera
+	firstCam = false;
+	thirdCam = true;
+	freeCam = false;
 
 	m_playerPosition = glm::vec3(0);
 	m_playerOrientation = glm::mat4(1);
@@ -82,16 +83,13 @@ Game::~Game()
 	//game objects
 	delete m_pCamera;
 	delete m_pSkybox;
-	delete m_pPlanarTerrain;
 	delete m_pFtFont;
-	delete m_pBarrelMesh;
-	delete m_pHorseMesh;
 	delete m_pPlayerCarMesh;
-	delete m_pSphere;
 	delete m_pAudio;
 	delete m_pCatmullRom;
 	delete m_pBarricadeSpline;
 	delete m_pTunnel;
+	delete m_pOverpass;
 	delete m_pHeightMapTerrain;
 
 	if (m_pShaderPrograms != NULL) {
@@ -115,16 +113,13 @@ void Game::Initialise()
 	m_pCamera = new CCamera;
 	m_pSkybox = new CSkybox;
 	m_pShaderPrograms = new vector <CShaderProgram *>;
-	m_pPlanarTerrain = new CPlane;
 	m_pFtFont = new CFreeTypeFont;
-	m_pBarrelMesh = new COpenAssetImportMesh;
-	m_pHorseMesh = new COpenAssetImportMesh;
 	m_pPlayerCarMesh = new COpenAssetImportMesh;
-	m_pSphere = new CSphere;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 	m_pBarricadeSpline = new CBarricadeSpline;
 	m_pTunnel = new CTunnel;
+	m_pOverpass = new COverpass;
 	m_pHeightMapTerrain = new CHeightMapTerrain;
 
 	RECT dimensions = m_gameWindow.GetDimensions();
@@ -198,12 +193,7 @@ void Game::Initialise()
 	m_pFtFont->SetShaderProgram(pFontProgram);
 
 	// Load some meshes in OBJ format
-	m_pBarrelMesh->Load("resources\\models\\Barrel\\Barrel02.obj");  // Downloaded from http://www.psionicgames.com/?page_id=24 on 24 Jan 2013
-	m_pHorseMesh->Load("resources\\models\\Horse\\Horse2.obj");  // Downloaded from http://opengameart.org/content/horse-lowpoly on 24 Jan 2013
 	m_pPlayerCarMesh->Load("resources\\models\\Cars\\obj\\car-coupe-blue.obj"); // downloaded from: https://opengameart.org/content/vehicles-assets-pt1
-
-	// Create a sphere
-	m_pSphere->Create("resources\\textures\\", "dirtpile01.jpg", 25, 25);  // Texture downloaded from http://www.psionicgames.com/?page_id=26 on 24 Jan 2013
 	glEnable(GL_CULL_FACE);
 
 	// Initialise audio and play background music
@@ -214,6 +204,9 @@ void Game::Initialise()
 
 	//tunnel texture downloaded from: https://opengameart.org/node/7651 on 11th Mar 2023
 	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg", 5.0f);
+
+	// overpass texture downloaded from: ....
+	m_pOverpass->Create("resources\\textures\\4-metal-plates.jpg", 1.0f);
 
 	//initialise centreline for the track
 	m_pCatmullRom->CreateCentreline();
@@ -296,12 +289,12 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 
-	//Render the track
+	//Render the players car
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(m_playerPosition);
 		modelViewMatrixStack *= m_playerOrientation;
 		modelViewMatrixStack.Scale(glm::vec3(1.75f));
-		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(m_carRotation));
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(m_playerRotation));
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -318,7 +311,7 @@ void Game::Render()
 		m_pCatmullRom->RenderTrack();
 	modelViewMatrixStack.Pop();
 
-	//Renderthe barricades
+	//Render the barricades
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -365,6 +358,17 @@ void Game::Render()
 		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		m_pTunnel->Render();
 	modelViewMatrixStack.Pop();
+
+	// render tunnel after hairpin
+	modelViewMatrixStack.Push();
+		float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200,0,0));
+		modelViewMatrixStack.Translate(glm::vec3(200, temp + 50, 0));
+		modelViewMatrixStack.Scale(glm::vec3(1, 1, 1));
+		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		m_pOverpass->Render();
+	modelViewMatrixStack.Pop();
 		
 	// Draw the 2D graphics after the 3D graphics
 	DisplayFrameRate();
@@ -376,16 +380,12 @@ void Game::Render()
 
 // Update method runs repeatedly with the Render method
 void Game::Update() 
-{
-	// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
-	//m_pCamera->Update(m_dt);
-	 
+{ 
 	m_pAudio->Update();
 
-	// code to set the camera along the path
-	// increment distance by time elapsed, then pass this value to sample function to move camera
-	//m_currentDistance = m_currentDistance + m_dt * 0.2;
-	m_currentDistance = m_currentDistance + (m_dt * m_cameraSpeed);
+	// Code to work out a TNB frame in order to position and orient the players car
+	// Increment distance by time elapsed multiplied by the players speed which can be controlled by key presses
+	m_currentDistance = m_currentDistance + (m_dt * m_playerSpeed);
 	glm::vec3 p, up;
 	m_pCatmullRom->Sample(m_currentDistance, p, up);
 	glm::vec3 pNext, upNext;
@@ -393,17 +393,31 @@ void Game::Update()
 	glm::vec3 t = normalize(pNext - p);
 	glm::vec3 n = normalize(glm::vec3(glm::cross(t, upNext)));
 	glm::vec3 b = normalize(glm::vec3(glm::cross(n, t)));
-	// set the camera following the path defined above, looking at the track, with an upvector identical to the tracks upvector
-	//m_pCamera->Set(p + glm::vec3(0, 20, 0), (p + 50.f * t), b);
 
-	m_playerPosition = p + (n * (m_carTurn));
+	// position the players car and orient it to follow the path
+	m_playerPosition = p + (n * (m_playerTurn));
 	m_playerOrientation = glm::mat4(glm::mat3(t, b, n));
+	
+	// Booleans to check which camera should be active based on what key is pressed
+	// set method = camera position, camera look at, camera up vector
+	if (thirdCam == true)
+	{
+		// THIRD-PERSON CAMERA
+		m_pCamera->Set(m_playerPosition - (t * 50.0f) + glm::vec3(0, 20, 0), m_playerPosition + (t * 30.0f), b);
+	}
 
-	// THIRD-PERSON CAMERA
-	m_pCamera->Set(m_playerPosition - (t * 50.0f) + glm::vec3(0,20,0), m_playerPosition + (t * 30.0f), b);
+	else if (firstCam == true)
+	{
+		// FIRST-PERSON CAMERA
+		m_pCamera->Set(m_playerPosition + (t * 15.0f) + glm::vec3(0, 3, 0), m_playerPosition + (t * 50.0f), b);
+	}
 
-	// FIRST-PERSON CAMERA
-	//m_pCamera->Set(m_playerPosition + (t * 15.0f) + glm::vec3(0,3,0), m_playerPosition + (t * 30.0f), b);
+	else if (freeCam == true)
+	{
+		// FREE CAMERA
+		// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
+		m_pCamera->Update(m_dt);
+	}
 
 	//COLLISION DETECTION
 	
@@ -539,54 +553,85 @@ LRESULT Game::ProcessEvents(HWND window, UINT message, WPARAM w_param, LPARAM l_
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
+		case '9':
+			m_pAudio->PlayEventSound();
+			break;
+		case '0':
+			m_pAudio->PlayEventSound();
+			break;
+
 		case '1':
-			m_pAudio->PlayEventSound();
-			//m_pCamera->Set(m_playerPosition + (t * 15.0f) + glm::vec3(0, 3, 0), m_playerPosition + (t * 30.0f), b);
+			// FIRST PERSON CAMERA
+			firstCam = true;
+			thirdCam = false;
+			freeCam = false;
 			break;
-		case VK_F1:
-			m_pAudio->PlayEventSound();
+		case '2':
+			// THIRD-PERSON CAMERA
+			firstCam = false;
+			thirdCam = true;
+			freeCam = false;
 			break;
+		case '3':
+			// FREE CAMERA
+			// Set free camera at a point, looking at a point, with an up vector
+			// Camera is set() because if the free camera is called when the other cameras are tilted, it causes the free cam to be tilted
+			// this resets that for a better experience using the free cam
+			m_pCamera->Set(glm::vec3(0,30,0), glm::vec3(100,30,0), glm::vec3(0,1,0));
+			firstCam = false;
+			thirdCam = false;
+			freeCam = true;
+			break;
+
+		// WASD CONTROLS
+		// barricade collsions done here with the turns left and right clamped within 30 and -30
 		case 'W':
-			if (m_cameraSpeed < 0.2f)
+			if (m_playerSpeed < 0.2f)
 			{
-				m_cameraSpeed = m_cameraSpeed + 0.001f;
+				// ACCELERATE
+				m_playerSpeed = m_playerSpeed + 0.001f;
 			}
 			break;
 		case 'S':
-			if (m_cameraSpeed > 0.003f)
+			if (m_playerSpeed > 0.003f)
 			{
-				m_cameraSpeed = m_cameraSpeed - 0.003f;
+				// BRAKE / SLOW DOWN
+				m_playerSpeed = m_playerSpeed - 0.003f;
 			}
-			else if (m_cameraSpeed < 0.003f)
+			else if (m_playerSpeed < 0.003f)
 			{
-				m_cameraSpeed = 0;
+				// STOP
+				m_playerSpeed = 0;
 			}
 			break;
 		case 'A':
-			if (m_carTurn > (-30.0f))
+			if (m_playerTurn > (-30.0f))
 			{
-				m_carTurn = m_carTurn - 2.0f;
-				m_carRotation = 15.0f;
+				// TURN LEFT
+				m_playerTurn = m_playerTurn - 2.0f;
+				m_playerRotation = 15.0f;
 			}
 			break;
 		case 'D':
-			if (m_carTurn < 30.0f)
+			if (m_playerTurn < 30.0f)
 			{
-				m_carTurn = m_carTurn + 2.0f;
-				m_carRotation = -15.0f;
+				// TURN RIGHT
+				m_playerTurn = m_playerTurn + 2.0f;
+				m_playerRotation = -15.0f;
 			}
 			break;
 		}
 		break;
 
+	// Player rotation animation reverted after key released
 	case WM_KEYUP:
 		switch (w_param)
 		{
 		case 'A':
-			m_carRotation = 0.0f;
+			m_playerRotation = 0.0f;
 			break;
 		case 'D':
-			m_carRotation = 0.0f;
+			m_playerRotation = 0.0f;
 			break;
 		}
 		break;
