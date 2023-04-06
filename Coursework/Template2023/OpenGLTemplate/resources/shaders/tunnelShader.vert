@@ -36,6 +36,3 @@ void main()
 	// Pass through the texture coordinate
 	vTexCoord = inCoord;
 }
-
-
-	

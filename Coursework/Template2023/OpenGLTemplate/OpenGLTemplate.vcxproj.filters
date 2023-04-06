@@ -171,10 +171,22 @@
     <None Include="resources\shaders\textShader.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="resources\shaders\tunnelShader.frag">
+    <None Include="resources\shaders\tunnelShader.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="resources\shaders\tunnelShader.vert">
+    <None Include="resources\shaders\overpassShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\overpassShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\overpassTessControl.tcnl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\overpassTessEval.tese">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\tunnelShader.frag">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -13,7 +13,6 @@ class CShaderProgram;
 class CPlane;
 class CFreeTypeFont;
 class CHighResolutionTimer;
-class CSphere;
 class COpenAssetImportMesh;
 class CAudio;
 class CCatmullRom;
@@ -35,6 +34,7 @@ private:
 	vector <CShaderProgram *> *m_pShaderPrograms;
 	CFreeTypeFont *m_pFtFont;
 	COpenAssetImportMesh *m_pPlayerCarMesh;
+	COpenAssetImportMesh *m_pTreeMesh;
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
 	CCatmullRom *m_pCatmullRom;

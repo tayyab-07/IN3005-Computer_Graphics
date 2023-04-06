@@ -51,6 +51,7 @@ Game::Game()
 	m_pShaderPrograms = NULL;
 	m_pFtFont = NULL;
 	m_pPlayerCarMesh = NULL;
+	m_pTreeMesh - NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
@@ -85,6 +86,7 @@ Game::~Game()
 	delete m_pSkybox;
 	delete m_pFtFont;
 	delete m_pPlayerCarMesh;
+	delete m_pTreeMesh;
 	delete m_pAudio;
 	delete m_pCatmullRom;
 	delete m_pBarricadeSpline;
@@ -115,6 +117,7 @@ void Game::Initialise()
 	m_pShaderPrograms = new vector <CShaderProgram *>;
 	m_pFtFont = new CFreeTypeFont;
 	m_pPlayerCarMesh = new COpenAssetImportMesh;
+	m_pTreeMesh = new COpenAssetImportMesh;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 	m_pBarricadeSpline = new CBarricadeSpline;
@@ -141,6 +144,11 @@ void Game::Initialise()
 	sShaderFileNames.push_back("textShader.frag");
 	sShaderFileNames.push_back("tunnelShader.vert");
 	sShaderFileNames.push_back("tunnelShader.frag");
+	sShaderFileNames.push_back("overpassShader.vert");
+	sShaderFileNames.push_back("overpassTessControl.tcnl");
+	sShaderFileNames.push_back("overpassTessEval.tese");
+	sShaderFileNames.push_back("overpassShader.frag");
+
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -179,7 +187,23 @@ void Game::Initialise()
 	pTunnelProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pTunnelProgram);
 
+	// Create an overpass shader program
+	CShaderProgram* pOverpassProgram = new CShaderProgram;
+	pOverpassProgram->CreateProgram();
+	pOverpassProgram->AddShaderToProgram(&shShaders[6]);
+	pOverpassProgram->AddShaderToProgram(&shShaders[7]);
+	pOverpassProgram->AddShaderToProgram(&shShaders[8]);
+	pOverpassProgram->AddShaderToProgram(&shShaders[9]);
+	pOverpassProgram->LinkProgram();
+	m_pShaderPrograms->push_back(pOverpassProgram);
+
 	// You can follow this pattern to load additional shaders
+
+	// Enabling MSAA
+	glEnable(GL_MULTISAMPLE);
+
+	// Enabling Cull Face
+	glEnable(GL_CULL_FACE);
 
 	// Create the skybox
 	// Skybox downloaded from https://opengameart.org/content/mountain-skyboxes
@@ -194,7 +218,7 @@ void Game::Initialise()
 
 	// Load some meshes in OBJ format
 	m_pPlayerCarMesh->Load("resources\\models\\Cars\\obj\\car-coupe-blue.obj"); // downloaded from: https://opengameart.org/content/vehicles-assets-pt1
-	glEnable(GL_CULL_FACE);
+	m_pTreeMesh->Load("resources\\models\\Tree\\tree.obj"); // downloaded from: https://opengameart.org/content/lowpoly-tree
 
 	// Initialise audio and play background music
 	//m_pAudio->Initialise();
@@ -205,8 +229,8 @@ void Game::Initialise()
 	//tunnel texture downloaded from: https://opengameart.org/node/7651 on 11th Mar 2023
 	m_pTunnel->Create("resources\\textures\\5sqtunnelroaddark.jpg", 5.0f);
 
-	// overpass texture downloaded from: ....
-	m_pOverpass->Create("resources\\textures\\4-metal-plates.jpg", 1.0f);
+	// overpass texture downloaded from: https://opengameart.org/node/49685
+	m_pOverpass->Create("resources\\textures\\tex-13_spec.jpg", 1.0f);
 
 	//initialise centreline for the track
 	m_pCatmullRom->CreateCentreline();
@@ -289,6 +313,18 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 
+	//Render the track
+	modelViewMatrixStack.Push();
+		float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
+		modelViewMatrixStack.Translate(glm::vec3(200, temp + 50, 0));
+		modelViewMatrixStack.Scale(glm::vec3(1, 1, 1));
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
 	//Render the players car
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(m_playerPosition);
@@ -359,14 +395,32 @@ void Game::Render()
 		m_pTunnel->Render();
 	modelViewMatrixStack.Pop();
 
-	// render tunnel after hairpin
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Use the overpass shader program 
+	CShaderProgram* pOverpassProgram = (*m_pShaderPrograms)[3];
+	pOverpassProgram->UseProgram();
+	pOverpassProgram->SetUniform("bUseTexture", true);
+	pOverpassProgram->SetUniform("sampler0", 0);
+
+	// Set the projection matrix
+	pOverpassProgram->SetUniform("MVP", m_pCamera->GetPerspectiveProjectionMatrix());
+
+	// Set light and materials in tunnel shader program
+	pOverpassProgram->SetUniform("light1.position", viewMatrix* lightPosition1); // Position of light source *in eye coordinates*
+	pOverpassProgram->SetUniform("light1.La", glm::vec3(1, 1, 1));	// Ambient colour of light
+	pOverpassProgram->SetUniform("light1.Ld", glm::vec3(1, 1, 1));	// Diffuse colour of light
+	pOverpassProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
+	pOverpassProgram->SetUniform("material1.shininess", 40.0f);		// Shininess material property
+
+	// render overpass
 	modelViewMatrixStack.Push();
-		float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200,0,0));
+		//float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
 		modelViewMatrixStack.Translate(glm::vec3(200, temp + 50, 0));
 		modelViewMatrixStack.Scale(glm::vec3(1, 1, 1));
-		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pOverpassProgram->SetUniform("TessLevel", 4);
+		pOverpassProgram->SetUniform("ModelViewMatrix", modelViewMatrixStack.Top());
+		pOverpassProgram->SetUniform("NormalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		pOverpassProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		m_pOverpass->Render();
 	modelViewMatrixStack.Pop();
 		
@@ -666,8 +720,7 @@ LRESULT CALLBACK WinProc(HWND window, UINT message, WPARAM w_param, LPARAM l_par
 	return Game::GetInstance().ProcessEvents(window, message, w_param, l_param);
 }
 
-int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE, PSTR, int) 
-{
+int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE, PSTR, int) {
 	Game &game = Game::GetInstance();
 	game.SetHinstance(hinstance);
 
