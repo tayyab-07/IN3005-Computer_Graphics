@@ -89,6 +89,9 @@
     <ClInclude Include="Overpass.h">
       <Filter>Header Files\BasicShapes</Filter>
     </ClInclude>
+    <ClInclude Include="TreeMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio.cpp">
@@ -157,6 +160,9 @@
     <ClCompile Include="Overpass.cpp">
       <Filter>Source Files\BasicShapes</Filter>
     </ClCompile>
+    <ClCompile Include="TreeMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\mainShader.frag">
@@ -187,6 +193,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="resources\shaders\tunnelShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\treeShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\treeShader.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

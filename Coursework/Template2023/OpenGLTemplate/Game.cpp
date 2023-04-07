@@ -36,6 +36,7 @@ Source code drawn from a number of sources and examples, including contributions
 #include "FreeTypeFont.h"
 #include "MatrixStack.h"
 #include "OpenAssetImportMesh.h"
+#include "TreeMesh.h"
 #include "Audio.h"
 #include "CatmullRom.h"
 #include "BarricadeSpline.h"
@@ -51,7 +52,7 @@ Game::Game()
 	m_pShaderPrograms = NULL;
 	m_pFtFont = NULL;
 	m_pPlayerCarMesh = NULL;
-	m_pTreeMesh - NULL;
+	m_pTreeMesh = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
 	m_pCatmullRom = NULL;
@@ -117,7 +118,7 @@ void Game::Initialise()
 	m_pShaderPrograms = new vector <CShaderProgram *>;
 	m_pFtFont = new CFreeTypeFont;
 	m_pPlayerCarMesh = new COpenAssetImportMesh;
-	m_pTreeMesh = new COpenAssetImportMesh;
+	m_pTreeMesh = new CTreeMesh;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
 	m_pBarricadeSpline = new CBarricadeSpline;
@@ -135,7 +136,6 @@ void Game::Initialise()
 	m_pCamera->SetPerspectiveProjectionMatrix(45.0f, (float) width / (float) height, 0.1f, 5000.0f);
 
 	// Load shaders
-	// Added 2 new shaders at the bottom for my tunnel object
 	vector<CShader> shShaders;
 	vector<string> sShaderFileNames;
 	sShaderFileNames.push_back("mainShader.vert");
@@ -148,6 +148,8 @@ void Game::Initialise()
 	sShaderFileNames.push_back("overpassTessControl.tcnl");
 	sShaderFileNames.push_back("overpassTessEval.tese");
 	sShaderFileNames.push_back("overpassShader.frag");
+	sShaderFileNames.push_back("treeShader.vert");
+	sShaderFileNames.push_back("treeShader.frag");
 
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
@@ -188,7 +190,7 @@ void Game::Initialise()
 	m_pShaderPrograms->push_back(pTunnelProgram);
 
 	// Create an overpass shader program
-	CShaderProgram* pOverpassProgram = new CShaderProgram;
+	CShaderProgram *pOverpassProgram = new CShaderProgram;
 	pOverpassProgram->CreateProgram();
 	pOverpassProgram->AddShaderToProgram(&shShaders[6]);
 	pOverpassProgram->AddShaderToProgram(&shShaders[7]);
@@ -196,6 +198,14 @@ void Game::Initialise()
 	pOverpassProgram->AddShaderToProgram(&shShaders[9]);
 	pOverpassProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pOverpassProgram);
+
+	// Create a tree shader program
+	CShaderProgram *pTreeProgram = new CShaderProgram;
+	pTreeProgram->CreateProgram();
+	pTreeProgram->AddShaderToProgram(&shShaders[10]);
+	pTreeProgram->AddShaderToProgram(&shShaders[11]);
+	pTreeProgram->LinkProgram();
+	m_pShaderPrograms->push_back(pTreeProgram);
 
 	// You can follow this pattern to load additional shaders
 
@@ -259,6 +269,8 @@ void Game::Render()
 	glutil::MatrixStack modelViewMatrixStack;
 	modelViewMatrixStack.SetIdentity();
 
+	float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
+
 	// Use the main shader program 
 	CShaderProgram *pMainProgram = (*m_pShaderPrograms)[0];
 	pMainProgram->UseProgram();
@@ -287,7 +299,7 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.0f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(0.0f));	// Specular material reflectance
 	pMainProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
-		
+
 	// Render the skybox and terrain with full ambient reflectance 
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("renderSkybox", true);
@@ -313,18 +325,6 @@ void Game::Render()
 	pMainProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
 	pMainProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
 
-	//Render the track
-	modelViewMatrixStack.Push();
-		float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
-		modelViewMatrixStack.Translate(glm::vec3(200, temp + 50, 0));
-		modelViewMatrixStack.Scale(glm::vec3(1, 1, 1));
-		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// Render your object here
-		m_pTreeMesh->Render();
-	modelViewMatrixStack.Pop();
-
 	//Render the players car
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(m_playerPosition);
@@ -348,6 +348,7 @@ void Game::Render()
 	modelViewMatrixStack.Pop();
 
 	//Render the barricades
+	glDisable(GL_CULL_FACE);
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
@@ -355,6 +356,7 @@ void Game::Render()
 		// Render your object here
 		m_pBarricadeSpline->RenderBarricades();
 	modelViewMatrixStack.Pop();
+	glEnable(GL_CULL_FACE);
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Use the tunnel shader program 
@@ -395,8 +397,42 @@ void Game::Render()
 		m_pTunnel->Render();
 	modelViewMatrixStack.Pop();
 
+	// render overpass between tunnel
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-820, 70, -500));
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(-40.0f));
+		modelViewMatrixStack.Scale(glm::vec3(3, 2, 2));
+		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		m_pOverpass->Render();
+	modelViewMatrixStack.Pop();
+
+	// render overpass in final sector
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(20, 70, 1000));
+		modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), glm::radians(90.0f));
+		modelViewMatrixStack.Scale(glm::vec3(3, 2, 2));
+		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		m_pOverpass->Render();
+	modelViewMatrixStack.Pop();
+
+	// render overpass at last corner
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(675, 70, 500));
+		modelViewMatrixStack.Rotate(glm::vec3(0, 1, 0), glm::radians(120.0f));
+		modelViewMatrixStack.Scale(glm::vec3(3, 3, 2));
+		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		pTunnelProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		m_pOverpass->Render();
+	modelViewMatrixStack.Pop();
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Use the overpass shader program 
+	/// CURRENTLY BROKEN	
 	CShaderProgram* pOverpassProgram = (*m_pShaderPrograms)[3];
 	pOverpassProgram->UseProgram();
 	pOverpassProgram->SetUniform("bUseTexture", true);
@@ -423,7 +459,164 @@ void Game::Render()
 		pOverpassProgram->SetUniform("bUseTexture", true); // turn on/off texturing
 		m_pOverpass->Render();
 	modelViewMatrixStack.Pop();
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Use the tree shader program 
+
+	// Use the tunnel shader program 
+	CShaderProgram* pTreeProgram = (*m_pShaderPrograms)[4];
+	pTreeProgram->UseProgram();
+	pTreeProgram->SetUniform("bUseTexture", true);
+	pTreeProgram->SetUniform("sampler0", 0);
+
+	// Set the projection matrix
+	pTreeProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+
+	// Set light and materials in tunnel shader program
+	pTreeProgram->SetUniform("light1.position", viewMatrix* lightPosition1); // Position of light source *in eye coordinates*
+	pTreeProgram->SetUniform("light1.La", glm::vec3(1, 1, 1));	// Ambient colour of light
+	pTreeProgram->SetUniform("light1.Ld", glm::vec3(1, 1, 1));	// Diffuse colour of light
+	pTreeProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
+	pTreeProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
+	pTreeProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
+	pTreeProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
+	pTreeProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
 		
+	//Render the trees 1
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-900, 120, -900));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 2
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-300, 120, -700));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 3 
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(0, 120, -800));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 4
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(350, 120, -600));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 5
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(800, 120, -1200));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 6
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(350, 120, -200));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 7
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(350, 120, -600));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 8
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(0, 120, -400));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 9
+	modelViewMatrixStack.Push();
+	modelViewMatrixStack.Translate(glm::vec3(-500, 120, -400));
+	modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+	pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+	pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+	pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+	// Render your object here
+	m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 10
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-1000, -45, 400));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 11
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(-300, -18, 380));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the trees 12
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(glm::vec3(600, 120, 600));
+		modelViewMatrixStack.Scale(glm::vec3(10, 10, 10));
+		pTreeProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pTreeProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pTreeProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pTreeMesh->Render();
+	modelViewMatrixStack.Pop();
+
+
+
 	// Draw the 2D graphics after the 3D graphics
 	DisplayFrameRate();
 

@@ -574,10 +574,6 @@ void COverpass::Render()
 {
 	glBindVertexArray(m_uiVAO);
 	m_tTexture.Bind();
-
-	glPatchParameteri(GL_PATCH_VERTICES, 16);
-
-
 	
 	// Call glDrawArrays to render a face
 	// Front face
@@ -611,8 +607,6 @@ void COverpass::Render()
 	// Outside bottom right face
 	glDrawArrays(GL_TRIANGLE_STRIP, 74, 4);
 	
-	
-
 }
 
 void COverpass::Release()

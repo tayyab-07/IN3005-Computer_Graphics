@@ -143,6 +143,7 @@
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TreeMesh.h" />
     <ClInclude Include="Tunnel.h" />
     <ClInclude Include="VertexBufferObject.h" />
     <ClInclude Include="VertexBufferObjectIndexed.h" />
@@ -167,6 +168,7 @@
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TreeMesh.cpp" />
     <ClCompile Include="Tunnel.cpp" />
     <ClCompile Include="VertexBufferObject.cpp" />
     <ClCompile Include="VertexBufferObjectIndexed.cpp" />
@@ -180,6 +182,8 @@
     <None Include="resources\shaders\overpassTessEval.tese" />
     <None Include="resources\shaders\textShader.frag" />
     <None Include="resources\shaders\textShader.vert" />
+    <None Include="resources\shaders\treeShader.frag" />
+    <None Include="resources\shaders\treeShader.vert" />
     <None Include="resources\shaders\tunnelShader.frag" />
     <None Include="resources\shaders\tunnelShader.vert" />
   </ItemGroup>
