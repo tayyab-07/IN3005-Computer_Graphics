@@ -1,3 +1,7 @@
+
+// file is identical to COpenAssetImportMesh.cpp
+// The reason for this is to allow for instanced rendering to only be applied to the tree model and not to every mesh
+
 #include <assert.h>
 #include "TreeMesh.h"
 
@@ -208,7 +212,8 @@ void CTreeMesh::Render()
             m_Textures[MaterialIndex]->Bind(0);
         }
 
-
+        // Instanced rendering
+        // Last parameter indicates how many models to draw
         glDrawElementsInstanced(GL_TRIANGLES, m_Entries[i].NumIndices, GL_UNSIGNED_INT, 0,36);
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);

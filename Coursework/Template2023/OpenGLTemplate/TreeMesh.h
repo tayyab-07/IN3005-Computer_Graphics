@@ -1,5 +1,8 @@
 #pragma once
 
+// file is identical to COpenAssetImportMesh.h
+// The reason for this is to allow for instanced rendering to only be applied to the tree model and not to every mesh
+
 #include <map>
 #include <vector>
 #include "include/gl/glew.h"
@@ -30,11 +33,6 @@ struct Vertex1
         m_normal = normal;
     }
 };
-
-
-
-
-
 
 class CTreeMesh
 {

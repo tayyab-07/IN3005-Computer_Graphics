@@ -35,6 +35,10 @@ private:
 	vector <CShaderProgram *> *m_pShaderPrograms;
 	CFreeTypeFont *m_pFtFont;
 	COpenAssetImportMesh *m_pPlayerCarMesh;
+	COpenAssetImportMesh *m_pCar1Mesh;
+	COpenAssetImportMesh* m_pCar2Mesh;
+	COpenAssetImportMesh* m_pCar3Mesh;
+	COpenAssetImportMesh* m_pCar4Mesh;
 	CTreeMesh *m_pTreeMesh;
 	CHighResolutionTimer *m_pHighResolutionTimer;
 	CAudio *m_pAudio;
@@ -49,17 +53,41 @@ private:
 	int m_framesPerSecond;
 	bool m_appActive;
 	float m_currentDistance;
+	float m_car1Distance;
+	float m_car2Distance;
+	float m_car3Distance;
+	float m_car4Distance;
+	float m_points;
+	float m_pointMultiplier;
+	int m_health;
 
 	float m_playerSpeed;
 	float m_playerTurn;
 	float m_playerRotation;
 
-	bool freeCam;
-	bool thirdCam;
-	bool firstCam;
+	bool m_freeCam;
+	bool m_thirdCam;
+	bool m_firstCam;
 
+	// Player Car
+	glm::vec3 t;
+	glm::vec3 n;
+	glm::vec3 b;
 	glm::vec3 m_playerPosition;
 	glm::mat4 m_playerOrientation;
+
+	// Obstacle cars 
+	glm::vec3 m_car1Position;
+	glm::mat4 m_car1Orientation;
+
+	glm::vec3 m_car2Position;
+	glm::mat4 m_car2Orientation;
+
+	glm::vec3 m_car3Position;
+	glm::mat4 m_car3Orientation;
+
+	glm::vec3 m_car4Position;
+	glm::mat4 m_car4Orientation;
 
 public:
 	Game();
@@ -72,11 +100,13 @@ public:
 private:
 	static const int FPS = 60;
 	void DisplayFrameRate();
+	void DisplayPoints();
+	void DisplayLaps();
+	void DisplayHealth();
+	void DisplayEndScreen();
 	void GameLoop();
 	GameWindow m_gameWindow;
 	HINSTANCE m_hInstance;
 	int m_frameCount;
 	double m_elapsedTime;
-
-
 };

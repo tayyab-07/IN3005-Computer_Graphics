@@ -52,6 +52,10 @@ Game::Game()
 	m_pShaderPrograms = NULL;
 	m_pFtFont = NULL;
 	m_pPlayerCarMesh = NULL;
+	m_pCar1Mesh = NULL;
+	m_pCar2Mesh = NULL;
+	m_pCar3Mesh = NULL;
+	m_pCar4Mesh = NULL;
 	m_pTreeMesh = NULL;
 	m_pHighResolutionTimer = NULL;
 	m_pAudio = NULL;
@@ -66,17 +70,43 @@ Game::Game()
 	m_frameCount = 0;
 	m_elapsedTime = 0.0f;
 	m_currentDistance = 0.0f;
+
+	// obstacle cars start at different points along the track
+	m_car1Distance = 800.0f;
+	m_car2Distance = 1600.0f;
+	m_car3Distance = 2400.0f;
+	m_car4Distance = 3200.0f;
+
 	m_playerSpeed = 0.0f;
 	m_playerTurn = 0.0f;
 	m_playerRotation = 0.0f;
+	m_points = 0.0f;
+	m_pointMultiplier = 1.0f;
+	m_health = 100;
 
 	// set third person camera to true to start game on that camera
-	firstCam = false;
-	thirdCam = true;
-	freeCam = false;
+	m_firstCam = false;
+	m_thirdCam = true;
+	m_freeCam = false;
+
+	t = glm::vec3(0);
+	n = glm::vec3(0);
+	b = glm::vec3(0);
 
 	m_playerPosition = glm::vec3(0);
 	m_playerOrientation = glm::mat4(1);
+
+	m_car1Position = glm::vec3(0);
+	m_car1Orientation = glm::mat4(1);
+
+	m_car2Position = glm::vec3(0);
+	m_car2Orientation = glm::mat4(1);
+
+	m_car3Position = glm::vec3(0);
+	m_car3Orientation = glm::mat4(1);
+
+	m_car4Position = glm::vec3(0);
+	m_car4Orientation = glm::mat4(1);
 }
 
 // Destructor
@@ -87,6 +117,10 @@ Game::~Game()
 	delete m_pSkybox;
 	delete m_pFtFont;
 	delete m_pPlayerCarMesh;
+	delete m_pCar1Mesh;
+	delete m_pCar2Mesh;
+	delete m_pCar3Mesh;
+	delete m_pCar4Mesh;
 	delete m_pTreeMesh;
 	delete m_pAudio;
 	delete m_pCatmullRom;
@@ -118,6 +152,10 @@ void Game::Initialise()
 	m_pShaderPrograms = new vector <CShaderProgram *>;
 	m_pFtFont = new CFreeTypeFont;
 	m_pPlayerCarMesh = new COpenAssetImportMesh;
+	m_pCar1Mesh = new COpenAssetImportMesh;
+	m_pCar2Mesh = new COpenAssetImportMesh;
+	m_pCar3Mesh = new COpenAssetImportMesh;
+	m_pCar4Mesh = new COpenAssetImportMesh;
 	m_pTreeMesh = new CTreeMesh;
 	m_pAudio = new CAudio;
 	m_pCatmullRom = new CCatmullRom;
@@ -140,14 +178,18 @@ void Game::Initialise()
 	vector<string> sShaderFileNames;
 	sShaderFileNames.push_back("mainShader.vert");
 	sShaderFileNames.push_back("mainShader.frag");
+
 	sShaderFileNames.push_back("textShader.vert");
 	sShaderFileNames.push_back("textShader.frag");
+
 	sShaderFileNames.push_back("tunnelShader.vert");
 	sShaderFileNames.push_back("tunnelShader.frag");
+
 	sShaderFileNames.push_back("overpassShader.vert");
 	sShaderFileNames.push_back("overpassTessControl.tcnl");
 	sShaderFileNames.push_back("overpassTessEval.tese");
 	sShaderFileNames.push_back("overpassShader.frag");
+
 	sShaderFileNames.push_back("treeShader.vert");
 	sShaderFileNames.push_back("treeShader.frag");
 
@@ -229,6 +271,10 @@ void Game::Initialise()
 	// Load some meshes in OBJ format
 	m_pPlayerCarMesh->Load("resources\\models\\Cars\\obj\\car-coupe-blue.obj"); // downloaded from: https://opengameart.org/content/vehicles-assets-pt1
 	m_pTreeMesh->Load("resources\\models\\Tree\\tree.obj"); // downloaded from: https://opengameart.org/content/lowpoly-tree
+	m_pCar1Mesh->Load("resources\\models\\Cars\\obj\\car-van-silver.obj"); //downloaded from: https://opengameart.org/content/vehicles-assets-pt1
+	m_pCar2Mesh->Load("resources\\models\\Cars\\obj\\car-pickup-violet.obj"); //downloaded from: https://opengameart.org/content/vehicles-assets-pt1
+	m_pCar3Mesh->Load("resources\\models\\Cars\\obj\\car-hatchback-red.obj"); //downloaded from: https://opengameart.org/content/vehicles-assets-pt1
+	m_pCar4Mesh->Load("resources\\models\\Cars\\obj\\car-normal-green.obj"); //downloaded from: https://opengameart.org/content/vehicles-assets-pt1
 
 	// Initialise audio and play background music
 	//m_pAudio->Initialise();
@@ -269,8 +315,6 @@ void Game::Render()
 	glutil::MatrixStack modelViewMatrixStack;
 	modelViewMatrixStack.SetIdentity();
 
-	float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
-
 	// Use the main shader program 
 	CShaderProgram *pMainProgram = (*m_pShaderPrograms)[0];
 	pMainProgram->UseProgram();
@@ -291,6 +335,7 @@ void Game::Render()
 
 	// Set light and materials in main shader program
 	glm::vec4 lightPosition1 = glm::vec4(0, 100, -1500, 1); // Position of light source *in world coordinates*
+	glm::vec3 lightPosVec3 = glm::vec3(0, 100, -1500);
 	pMainProgram->SetUniform("light1.position", viewMatrix*lightPosition1); // Position of light source *in eye coordinates*
 	pMainProgram->SetUniform("light1.La", glm::vec3(1.0f));		// Ambient colour of light
 	pMainProgram->SetUniform("light1.Ld", glm::vec3(1.0f));		// Diffuse colour of light
@@ -338,6 +383,54 @@ void Game::Render()
 		m_pPlayerCarMesh->Render();
 	modelViewMatrixStack.Pop();
 
+	//Render the obstacle car 1
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car1Position);
+		modelViewMatrixStack *= m_car1Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar1Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the obstacle car 2
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car2Position);
+		modelViewMatrixStack *= m_car2Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar2Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the obstacle car 3
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car3Position);
+		modelViewMatrixStack *= m_car3Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar3Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the obstacle car 4
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car4Position);
+		modelViewMatrixStack *= m_car4Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar4Mesh->Render();
+	modelViewMatrixStack.Pop();
+
 	//Render the track
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
@@ -347,7 +440,8 @@ void Game::Render()
 		m_pCatmullRom->RenderTrack();
 	modelViewMatrixStack.Pop();
 
-	//Render the barricades
+	// Render the barricades
+	// Disable and enable GL_CULL_FACE in order to draw both sides of the barricades
 	glDisable(GL_CULL_FACE);
 	modelViewMatrixStack.Push();
 		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
@@ -368,17 +462,44 @@ void Game::Render()
 	// Set the projection matrix
 	pTunnelProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 
-	// Set light and materials in tunnel shader program
-	pTunnelProgram->SetUniform("light1.position", viewMatrix * lightPosition1); // Position of light source *in eye coordinates*
-	pTunnelProgram->SetUniform("light1.La", glm::vec3(1, 1, 1));	// Ambient colour of light
-	pTunnelProgram->SetUniform("light1.Ld", glm::vec3(1, 1, 1));	// Diffuse colour of light
-	pTunnelProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
-	pTunnelProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
+	// Set world light and materials of tunnels in tunnel shader program
+	pTunnelProgram->SetUniform("light[0].position", viewMatrix * lightPosition1);	// Position of light source *in eye coordinates*
+	pTunnelProgram->SetUniform("light[0].La", glm::vec3(1));						// Ambient colour of light
+	pTunnelProgram->SetUniform("light[0].Ld", glm::vec3(1));						// Diffuse colour of light
+	pTunnelProgram->SetUniform("light[0].Ls", glm::vec3(1));						// Specular colour of light
+	pTunnelProgram->SetUniform("material1.Ma", glm::vec3(0.3f, 0.3f, 0.3f));		// materials ambient colour
+	pTunnelProgram->SetUniform("material1.Md", glm::vec3(0.3f, 0.3f, 0.3f));		// materials diffuse colour
+	pTunnelProgram->SetUniform("material1.Ms", glm::vec3(1.0f, 1.0f, 1.0f));		// materials specular colour
+	pTunnelProgram->SetUniform("material1.shininess", 15.0f);						// Shininess material property
+	glm::vec3 direction = (glm::vec3(0,0,0) - lightPosVec3);						// vector to work out world lights direction
+	pTunnelProgram->SetUniform("light[0].direction", glm::normalize(viewNormalMatrix * direction)); // world light direction
+	pTunnelProgram->SetUniform("light[0].exponent", 200.0f);						// world light exponent
+	pTunnelProgram->SetUniform("light[0].cutoff", 89.0f);							// world light cutoff
+
+
+	// the headlamps position and directions are set relative to the player position and orientation given by the TNB frame in the update method
+	// Set the first headlamp light position, ambient, diffuse, specular, direction, expoenet, cutoff
+	pTunnelProgram->SetUniform("light[1].position", viewMatrix * glm::vec4(m_playerPosition + (n * 30.0f), 1.0f)); // Light position in eye coordinates
+	pTunnelProgram->SetUniform("light[1].La", glm::vec3(0.8f, 0.8f, 0.0f));
+	pTunnelProgram->SetUniform("light[1].Ld", glm::vec3(0.8f, 0.8f, 0.0f));
+	pTunnelProgram->SetUniform("light[1].Ls", glm::vec3(0.8f, 0.8f, 0.0f));
+	pTunnelProgram->SetUniform("light[1].direction", glm::normalize(viewNormalMatrix * (t - (b * 0.2f))));
+	pTunnelProgram->SetUniform("light[1].exponent", 2.0f);
+	pTunnelProgram->SetUniform("light[1].cutoff", 30.0f);
+
+	// Set the second headlamp light position, ambient, diffuse, specular, direction, expoenet, cutoff
+	pTunnelProgram->SetUniform("light[2].position", viewMatrix * glm::vec4(m_playerPosition - (n * 30.0f), 1.0f)); // Light position in eye coordinates
+	pTunnelProgram->SetUniform("light[2].La", glm::vec3(0.8f, 0.8f, 0.0f));
+	pTunnelProgram->SetUniform("light[2].Ld", glm::vec3(0.8f, 0.8f, 0.0f));
+	pTunnelProgram->SetUniform("light[2].Ls", glm::vec3(0.8f, 0.8f, 0.0));
+	pTunnelProgram->SetUniform("light[2].direction", glm::normalize(viewNormalMatrix * (t - (b * 0.2f))));
+	pTunnelProgram->SetUniform("light[2].exponent", 2.0f);
+	pTunnelProgram->SetUniform("light[2].cutoff", 30.0f);
 
 	// render tunnel after turn 1
 	modelViewMatrixStack.Push();
 		modelViewMatrixStack.Translate(glm::vec3(300,85,-850));
-		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(91.f));
+		modelViewMatrixStack.Rotate(glm::vec3(0,1,0), glm::radians(91.0f));
 		modelViewMatrixStack.Scale(glm::vec3(10,10,50));
 		pTunnelProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
 		pTunnelProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
@@ -451,7 +572,7 @@ void Game::Render()
 	// render overpass
 	modelViewMatrixStack.Push();
 		//float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
-		modelViewMatrixStack.Translate(glm::vec3(200, temp + 50, 0));
+		modelViewMatrixStack.Translate(glm::vec3(200, 200, 0));
 		modelViewMatrixStack.Scale(glm::vec3(1, 1, 1));
 		pOverpassProgram->SetUniform("TessLevel", 4);
 		pOverpassProgram->SetUniform("ModelViewMatrix", modelViewMatrixStack.Top());
@@ -464,7 +585,7 @@ void Game::Render()
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Use the tree shader program 
 
-	// Use the tunnel shader program 
+	// Use the tree shader program 
 	CShaderProgram* pTreeProgram = (*m_pShaderPrograms)[4];
 	pTreeProgram->UseProgram();
 	pTreeProgram->SetUniform("bUseTexture", true);
@@ -473,7 +594,7 @@ void Game::Render()
 	// Set the projection matrix
 	pTreeProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 
-	// Set light and materials in tunnel shader program
+	// Set light and materials in tree shader program
 	pTreeProgram->SetUniform("light1.position", viewMatrix* lightPosition1); // Position of light source *in eye coordinates*
 	pTreeProgram->SetUniform("light1.La", glm::vec3(1, 1, 1));	// Ambient colour of light
 	pTreeProgram->SetUniform("light1.Ld", glm::vec3(1, 1, 1));	// Diffuse colour of light
@@ -615,10 +736,20 @@ void Game::Render()
 		m_pTreeMesh->Render();
 	modelViewMatrixStack.Pop();
 
-
-
 	// Draw the 2D graphics after the 3D graphics
 	DisplayFrameRate();
+
+	//Display Points
+	DisplayPoints();
+
+	//Display Laps
+	DisplayLaps();
+
+	//Display Health
+	DisplayHealth();
+
+	// Display End Screen
+	DisplayEndScreen();
 
 	// Swap buffers to show the rendered image
 	SwapBuffers(m_gameWindow.Hdc());		
@@ -637,37 +768,124 @@ void Game::Update()
 	m_pCatmullRom->Sample(m_currentDistance, p, up);
 	glm::vec3 pNext, upNext;
 	m_pCatmullRom->Sample(m_currentDistance + 1, pNext, upNext);
-	glm::vec3 t = normalize(pNext - p);
-	glm::vec3 n = normalize(glm::vec3(glm::cross(t, upNext)));
-	glm::vec3 b = normalize(glm::vec3(glm::cross(n, t)));
+	t = normalize(pNext - p);
+	n = normalize(glm::vec3(glm::cross(t, upNext)));
+	b = normalize(glm::vec3(glm::cross(n, t)));
 
 	// position the players car and orient it to follow the path
 	m_playerPosition = p + (n * (m_playerTurn));
 	m_playerOrientation = glm::mat4(glm::mat3(t, b, n));
+
+
+	// Code to work out the TNB frames for all 4 obstacle cars to set their orientation and position
+	// each car is going at a slightly different speed, can be adjusted by the multiplier to m_dt
+	// each car is slightly further left or right on the track, can be adjusted by the multiplier to n when setting the cars position
+	// CAR 1
+	m_car1Distance = m_car1Distance + (m_dt * 0.08f);
+	glm::vec3 car1P, car1Up;
+	m_pCatmullRom->Sample(m_car1Distance, car1P, car1Up);
+	glm::vec3 car1PNext, car1UpNext;
+	m_pCatmullRom->Sample(m_car1Distance + 1, car1PNext, car1UpNext);
+	glm::vec3 car1T = normalize(car1PNext - car1P);
+	glm::vec3 car1N = normalize(glm::vec3(glm::cross(car1T, car1UpNext)));
+	glm::vec3 car1B = normalize(glm::vec3(glm::cross(car1N, car1T)));
+
+	m_car1Position = car1P + (n * -16.0f);
+	m_car1Orientation = glm::mat4(glm::mat3(car1T, car1B, car1N));
+
+	// CAR 2
+	m_car2Distance = m_car2Distance + (m_dt * 0.1f);
+	glm::vec3 car2P, car2Up;
+	m_pCatmullRom->Sample(m_car2Distance, car2P, car2Up);
+	glm::vec3 car2PNext, car2UpNext;
+	m_pCatmullRom->Sample(m_car2Distance + 1, car2PNext, car2UpNext);
+	glm::vec3 car2T = normalize(car2PNext - car2P);
+	glm::vec3 car2N = normalize(glm::vec3(glm::cross(car2T, car2UpNext)));
+	glm::vec3 car2B = normalize(glm::vec3(glm::cross(car2N, car2T)));
+
+	m_car2Position = car2P + (n * 9.0f);
+	m_car2Orientation = glm::mat4(glm::mat3(car2T, car2B, car2N));
+
+	// CAR 3
+	m_car3Distance = m_car3Distance + (m_dt * 0.12f);
+	glm::vec3 car3P, car3Up;
+	m_pCatmullRom->Sample(m_car3Distance, car3P, car3Up);
+	glm::vec3 car3PNext, car3UpNext;
+	m_pCatmullRom->Sample(m_car3Distance + 1, car3PNext, car3UpNext);
+	glm::vec3 car3T = normalize(car3PNext - car3P);
+	glm::vec3 car3N = normalize(glm::vec3(glm::cross(car3T, car3UpNext)));
+	glm::vec3 car3B = normalize(glm::vec3(glm::cross(car3N, car3T)));
+
+	m_car3Position = car3P + (n * -5.0f);
+	m_car3Orientation = glm::mat4(glm::mat3(car3T, car3B, car3N));
+
+	// CAR 4
+	m_car4Distance = m_car4Distance + (m_dt * 0.15f);
+	glm::vec3 car4P, car4Up;
+	m_pCatmullRom->Sample(m_car4Distance, car4P, car4Up);
+	glm::vec3 car4PNext, car4UpNext;
+	m_pCatmullRom->Sample(m_car4Distance + 1, car4PNext, car4UpNext);
+	glm::vec3 car4T = normalize(car4PNext - car4P);
+	glm::vec3 car4N = normalize(glm::vec3(glm::cross(car4T, car4UpNext)));
+	glm::vec3 car4B = normalize(glm::vec3(glm::cross(car4N, car4T)));
+
+	m_car4Position = car4P + (n * 12.0f);
+	m_car4Orientation = glm::mat4(glm::mat3(car4T, car4B, car4N));
 	
+
 	// Booleans to check which camera should be active based on what key is pressed
 	// set method = camera position, camera look at, camera up vector
-	if (thirdCam == true)
+	if (m_thirdCam == true)
 	{
 		// THIRD-PERSON CAMERA
 		m_pCamera->Set(m_playerPosition - (t * 50.0f) + glm::vec3(0, 20, 0), m_playerPosition + (t * 30.0f), b);
 	}
 
-	else if (firstCam == true)
+	else if (m_firstCam == true)
 	{
 		// FIRST-PERSON CAMERA
 		m_pCamera->Set(m_playerPosition + (t * 15.0f) + glm::vec3(0, 3, 0), m_playerPosition + (t * 50.0f), b);
 	}
 
-	else if (freeCam == true)
+	else if (m_freeCam == true)
 	{
 		// FREE CAMERA
 		// Update the camera using the amount of time that has elapsed to avoid framerate dependent motion
 		m_pCamera->Update(m_dt);
 	}
 
-	//COLLISION DETECTION
-	
+	// COLLISION DETECTION
+	// works by checking if the player car is below a thrrshold distance to the obstacle cars
+	if (glm::length(m_playerPosition - m_car1Position) < 10)
+	{
+		m_health = m_health - 30;
+		m_playerSpeed = 0;
+	}
+
+	if (glm::length(m_playerPosition - m_car2Position) < 10)
+	{
+		m_health = m_health - 30;
+		m_playerSpeed = 0;
+	}
+
+	if (glm::length(m_playerPosition - m_car3Position) < 10)
+	{
+		m_health = m_health - 30;
+		m_playerSpeed = 0;
+	}
+
+	if (glm::length(m_playerPosition - m_car4Position) < 10)
+	{
+		m_health = m_health - 30;
+		m_playerSpeed = 0;
+	}
+
+	// Unrenders the car 
+	if (m_health <= 0)
+	{
+		m_pPlayerCarMesh->~COpenAssetImportMesh();
+	}
+
 }
 
 
@@ -688,7 +906,13 @@ void Game::DisplayFrameRate()
     {
 		m_elapsedTime = 0;
 		m_framesPerSecond = m_frameCount;
-
+		// incrementing player points every second 
+		// only increment if player health is above 0, allows player to see the points they ended on at the end screen
+		if (m_health > 0)
+		{
+			m_points = m_points + 1;
+		}
+		
 		// Reset the frames per second
 		m_frameCount = 0;
     }
@@ -704,14 +928,99 @@ void Game::DisplayFrameRate()
 	}
 }
 
+void Game::DisplayPoints()
+{
+	CShaderProgram* fontProgram = (*m_pShaderPrograms)[1];
+
+	RECT dimensions = m_gameWindow.GetDimensions();
+	int height = dimensions.bottom - dimensions.top;
+	int width = dimensions.right - dimensions.left;
+
+	// point multiplier incremented by current lap
+	// lap 3 = multiplier 4x
+	m_pointMultiplier = 1.0f + (m_pCatmullRom->CurrentLap(m_currentDistance));
+	int point = m_points * m_pointMultiplier;
+	int pointMultiplier = m_pointMultiplier;
+
+	// Use the font shader program and render the text
+	fontProgram->UseProgram();
+	glDisable(GL_DEPTH_TEST);
+	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
+	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
+	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	m_pFtFont->Render(width / 2, height - 40, 50, "Points: %d", point);
+	m_pFtFont->Render(width / 2, height - 80, 50, "Multiplier: %d", pointMultiplier);
+}
+
+void Game::DisplayLaps()
+{
+	CShaderProgram* fontProgram = (*m_pShaderPrograms)[1];
+
+	RECT dimensions = m_gameWindow.GetDimensions();
+	int height = dimensions.bottom - dimensions.top;
+
+	// Use the font shader program and render the text
+	fontProgram->UseProgram();
+	glDisable(GL_DEPTH_TEST);
+	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
+	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
+	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	m_pFtFont->Render(1375, height - 40, 50, "Laps: %d", m_pCatmullRom->CurrentLap(m_currentDistance));
+
+}
+
+void Game::DisplayHealth()
+{
+	CShaderProgram* fontProgram = (*m_pShaderPrograms)[1];
+
+	RECT dimensions = m_gameWindow.GetDimensions();
+	int height = dimensions.bottom - dimensions.top;
+	int width = dimensions.right - dimensions.left;
+
+	// Use the font shader program and render the text
+	fontProgram->UseProgram();
+	glDisable(GL_DEPTH_TEST);
+	fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
+	fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
+	fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	m_pFtFont->Render(300, height - 40, 50, "Car Health: %d", m_health);
+}
+
+void Game::DisplayEndScreen()
+{
+	// only display end screen when health is at or below 0
+
+	if (m_health <= 0)
+	{
+		CShaderProgram* fontProgram = (*m_pShaderPrograms)[1];
+
+		RECT dimensions = m_gameWindow.GetDimensions();
+		int height = dimensions.bottom - dimensions.top;
+		int width = dimensions.right - dimensions.left;
+
+		m_pointMultiplier = 1.0f + (m_pCatmullRom->CurrentLap(m_currentDistance));
+		int point = m_points * m_pointMultiplier;
+
+		// Use the font shader program and render the text
+		fontProgram->UseProgram();
+		glDisable(GL_DEPTH_TEST);
+		fontProgram->SetUniform("matrices.modelViewMatrix", glm::mat4(1));
+		fontProgram->SetUniform("matrices.projMatrix", m_pCamera->GetOrthographicProjectionMatrix());
+		fontProgram->SetUniform("vColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		m_pFtFont->Render(width/2 - 250, height/2 , 100, "GAME OVER!");
+		m_pFtFont->Render(width / 2 - 250, height / 2 - 200, 100, "Points = %d", point);
+	}
+	
+}
+
 // The game loop runs repeatedly until game over
 void Game::GameLoop()
 {
 	/*
 	// Fixed timer
-	dDt = pHighResolutionTimer->Elapsed();
-	if (dDt > 1000.0 / (double) Game::FPS) {
-		pHighResolutionTimer->Start();
+	m_dt = m_pHighResolutionTimer->Elapsed();
+	if (m_dt > 1000.0 / (double) Game::FPS) {
+		m_pHighResolutionTimer->Start();
 		Update();
 		Render();
 	}
@@ -722,6 +1031,8 @@ void Game::GameLoop()
 	Update();
 	Render();
 	m_dt = m_pHighResolutionTimer->Elapsed();
+	
+	
 }
 
 
@@ -809,15 +1120,15 @@ LRESULT Game::ProcessEvents(HWND window, UINT message, WPARAM w_param, LPARAM l_
 
 		case '1':
 			// FIRST PERSON CAMERA
-			firstCam = true;
-			thirdCam = false;
-			freeCam = false;
+			m_firstCam = true;
+			m_thirdCam = false;
+			m_freeCam = false;
 			break;
 		case '2':
 			// THIRD-PERSON CAMERA
-			firstCam = false;
-			thirdCam = true;
-			freeCam = false;
+			m_firstCam = false;
+			m_thirdCam = true;
+			m_freeCam = false;
 			break;
 		case '3':
 			// FREE CAMERA
@@ -825,9 +1136,9 @@ LRESULT Game::ProcessEvents(HWND window, UINT message, WPARAM w_param, LPARAM l_
 			// Camera is set() because if the free camera is called when the other cameras are tilted, it causes the free cam to be tilted
 			// this resets that for a better experience using the free cam
 			m_pCamera->Set(glm::vec3(0,30,0), glm::vec3(100,30,0), glm::vec3(0,1,0));
-			firstCam = false;
-			thirdCam = false;
-			freeCam = true;
+			m_firstCam = false;
+			m_thirdCam = false;
+			m_freeCam = true;
 			break;
 
 		// WASD CONTROLS

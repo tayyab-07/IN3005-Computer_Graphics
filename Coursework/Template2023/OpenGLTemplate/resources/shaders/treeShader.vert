@@ -21,6 +21,9 @@ out vec2 vTexCoord;	// Texture coordinate
 // This is the entry point into the vertex shader
 void main()
 {	
+	// using gl_InstanceID with mod and div to set organisation of the trees
+	// shift is multiplied by 6 to set the apcing between the trees
+	// number of instancers passed in from TreeMesh.cpp
 	float x = gl_InstanceID % 6;
 	float z = gl_InstanceID / 6;
 	vec3 shift = 6 * vec3(x, 0, z);

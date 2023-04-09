@@ -1,5 +1,6 @@
 #version 400 core
 
+// In variables from vertex shader
 in vec3 vEyeNorm;
 in vec4 vEyePosition;
 in vec2 vTexCoord;
@@ -54,6 +55,7 @@ vec3 PhongModel(vec4 eyePosition, vec3 eyeNorm)
 
 void main()
 {
+	// colour from the phong model
 	vec3 vColour = PhongModel(vEyePosition, normalize(vEyeNorm));
 
 	// Get the texel colour from the texture sampler
