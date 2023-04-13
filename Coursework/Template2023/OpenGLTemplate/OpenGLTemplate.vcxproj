@@ -176,6 +176,8 @@
     <ClCompile Include="VertexBufferObjectIndexed.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\carShader.frag" />
+    <None Include="resources\shaders\carShader.vert" />
     <None Include="resources\shaders\mainShader.frag" />
     <None Include="resources\shaders\mainShader.vert" />
     <None Include="resources\shaders\overpassShader.frag" />
@@ -188,6 +190,8 @@
     <None Include="resources\shaders\treeShader.vert" />
     <None Include="resources\shaders\tunnelShader.frag" />
     <None Include="resources\shaders\tunnelShader.vert" />
+    <None Include="simpleDepthShader.frag" />
+    <None Include="simpleDepthShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -46,7 +46,6 @@ bool CFrameBufferObject::Create(int a_iWidth, int a_iHeight)
 
 	// Now attach the colour and depth textures to the FBO
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_uiColourTexture, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_uiDepthTexture, 0);
 
 	// Tell OpenGL that we want to draw into the frambuffer's colour attachment
 	static const GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};

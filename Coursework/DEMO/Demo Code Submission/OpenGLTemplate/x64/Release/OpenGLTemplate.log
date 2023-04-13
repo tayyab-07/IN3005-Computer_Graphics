@@ -1,0 +1,15 @@
+﻿  Camera.cpp
+  FrameBufferObject.cpp
+  Game.cpp
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(996,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(997,22): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(1056,13): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\OpenGLTemplate\Game.cpp(1087,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Plane.cpp
+     Creating library C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\x64\Release\OpenGLTemplate.lib and object C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\x64\Release\OpenGLTemplate.exp
+  Generating code
+  350 of 1291 functions (27.1%) were compiled, the rest were copied from previous compilation.
+    10 functions were new in current compilation
+    171 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  OpenGLTemplate.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Template2023\x64\Release\OpenGLTemplate.exe

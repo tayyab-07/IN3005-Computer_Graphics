@@ -207,5 +207,13 @@
     <None Include="resources\shaders\treeShader.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="resources\shaders\carShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="resources\shaders\carShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="simpleDepthShader.vert" />
+    <None Include="simpleDepthShader.frag" />
   </ItemGroup>
 </Project>

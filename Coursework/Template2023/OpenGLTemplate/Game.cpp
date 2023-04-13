@@ -207,6 +207,9 @@ void Game::Initialise()
 	sShaderFileNames.push_back("treeShader.vert");
 	sShaderFileNames.push_back("treeShader.frag");
 
+	sShaderFileNames.push_back("carShader.vert");
+	sShaderFileNames.push_back("carShader.frag");
+
 
 	for (int i = 0; i < (int) sShaderFileNames.size(); i++) {
 		string sExt = sShaderFileNames[i].substr((int) sShaderFileNames[i].size()-4, 4);
@@ -266,6 +269,14 @@ void Game::Initialise()
 	pTreeProgram->LinkProgram();
 	m_pShaderPrograms->push_back(pTreeProgram);
 
+	// Create a car shader program
+	CShaderProgram *pCarProgram = new CShaderProgram;
+	pCarProgram->CreateProgram();
+	pCarProgram->AddShaderToProgram(&shShaders[12]);
+	pCarProgram->AddShaderToProgram(&shShaders[13]);
+	pCarProgram->LinkProgram();
+	m_pShaderPrograms->push_back(pCarProgram);
+
 	// You can follow this pattern to load additional shaders
 
 	// Enabling MSAA
@@ -322,10 +333,10 @@ void Game::Initialise()
 }
 
 // Render method runs repeatedly in a loop
-void Game::RenderScene(int pass) 
+void Game::RenderScene(int pass)
 {
 	// Clear the buffers and enable depth testing (z-buffering)
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
 	// Set up a matrix stack
@@ -333,14 +344,14 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.SetIdentity();
 
 	// Use the main shader program 
-	CShaderProgram *pMainProgram = (*m_pShaderPrograms)[0];
+	CShaderProgram* pMainProgram = (*m_pShaderPrograms)[0];
 	pMainProgram->UseProgram();
 	pMainProgram->SetUniform("bUseTexture", true);
 	pMainProgram->SetUniform("sampler0", 0);
 	// Note: cubemap and non-cubemap textures should not be mixed in the same texture unit.  Setting unit 10 to be a cubemap texture.
-	int cubeMapTextureUnit = 10; 
+	int cubeMapTextureUnit = 10;
 	pMainProgram->SetUniform("CubeMapTex", cubeMapTextureUnit);
-	
+
 	// Set the projection matrix
 	pMainProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
 	// Set previous Matrix in order to send to shader program for motion blur. Motion blur currently not working
@@ -351,7 +362,7 @@ void Game::RenderScene(int pass)
 	modelViewMatrixStack.LookAt(m_pCamera->GetPosition(), m_pCamera->GetView(), m_pCamera->GetUpVector());
 	glm::mat4 viewMatrix = modelViewMatrixStack.Top();
 	glm::mat3 viewNormalMatrix = m_pCamera->ComputeNormalMatrix(viewMatrix);
-
+	
 	// Set light and materials in main shader program
 	glm::vec4 lightPosition1 = glm::vec4(0, 100, -1500, 1); // Position of light source *in world coordinates*
 	glm::vec3 lightPosVec3 = glm::vec3(0, 100, -1500);
@@ -383,29 +394,7 @@ void Game::RenderScene(int pass)
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		m_pHeightMapTerrain->Render();
 	modelViewMatrixStack.Pop();
-
-	// CURRENTLY BROKEN
-	// On second pass render a plane to display motion blur
-	/*
-	if (pass == 1)
-	{
-		modelViewMatrixStack.Push();
-			modelViewMatrixStack.Translate(glm::vec3(0,200,0));
-			modelViewMatrixStack.Scale(10.0);
-			pMainProgram->SetUniform("sampler0", 0);
-			pMainProgram->SetUniform("sampler1", 1);
-			pMainProgram->SetUniform("invMVP", glm::inverse(*m_pCamera->GetPerspectiveProjectionMatrix()));
-			pMainProgram->SetUniform("prevMVP", prevMatrix);
-
-			pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-			pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-
-			m_pFBO->BindTexture(0);
-			m_pPlane->Render(false);
-			m_pCar1Mesh->Render();
-		modelViewMatrixStack.Pop();
-	}
-	*/
+	
 
 	// Turn on diffuse + specular materials
 	pMainProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
@@ -423,54 +412,6 @@ void Game::RenderScene(int pass)
 		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
 		// Render your object here
 		m_pPlayerCarMesh->Render();
-	modelViewMatrixStack.Pop();
-
-	//Render the obstacle car 1
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(m_car1Position);
-		modelViewMatrixStack *= m_car1Orientation;
-		modelViewMatrixStack.Scale(glm::vec3(1.75f));
-		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// Render your object here
-		m_pCar1Mesh->Render();
-	modelViewMatrixStack.Pop();
-
-	//Render the obstacle car 2
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(m_car2Position);
-		modelViewMatrixStack *= m_car2Orientation;
-		modelViewMatrixStack.Scale(glm::vec3(1.75f));
-		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// Render your object here
-		m_pCar2Mesh->Render();
-	modelViewMatrixStack.Pop();
-
-	//Render the obstacle car 3
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(m_car3Position);
-		modelViewMatrixStack *= m_car3Orientation;
-		modelViewMatrixStack.Scale(glm::vec3(1.75f));
-		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// Render your object here
-		m_pCar3Mesh->Render();
-	modelViewMatrixStack.Pop();
-
-	//Render the obstacle car 4
-	modelViewMatrixStack.Push();
-		modelViewMatrixStack.Translate(m_car4Position);
-		modelViewMatrixStack *= m_car4Orientation;
-		modelViewMatrixStack.Scale(glm::vec3(1.75f));
-		pMainProgram->SetUniform("bUseTexture", true); // turn on/off texturing
-		pMainProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
-		pMainProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
-		// Render your object here
-		m_pCar4Mesh->Render();
 	modelViewMatrixStack.Pop();
 
 	//Render the track
@@ -614,7 +555,6 @@ void Game::RenderScene(int pass)
 
 	// render overpass
 	modelViewMatrixStack.Push();
-		//float temp = m_pHeightMapTerrain->ReturnGroundHeight(glm::vec3(200, 0, 0));
 		modelViewMatrixStack.Translate(glm::vec3(200, 200, 0));
 		modelViewMatrixStack.Scale(glm::vec3(1, 1, 1));
 		pOverpassProgram->SetUniform("TessLevel", 4);
@@ -780,12 +720,105 @@ void Game::RenderScene(int pass)
 		m_pTreeMesh->Render();
 	modelViewMatrixStack.Pop();		
 
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Use the car shader program
+
+	// Use the car shader program 
+	CShaderProgram *pCarProgram = (*m_pShaderPrograms)[4];
+	pCarProgram->UseProgram();
+	pCarProgram->SetUniform("bUseTexture", true);
+	pCarProgram->SetUniform("sampler0", 0);
+
+	// Set the projection matrix
+	pCarProgram->SetUniform("matrices.projMatrix", m_pCamera->GetPerspectiveProjectionMatrix());
+
+	// Set light and materials in tree shader program
+	pCarProgram->SetUniform("light1.position", viewMatrix * lightPosition1); // Position of light source *in eye coordinates*
+	pCarProgram->SetUniform("light1.La", glm::vec3(1, 1, 1));	// Ambient colour of light
+	pCarProgram->SetUniform("light1.Ld", glm::vec3(1, 1, 1));	// Diffuse colour of light
+	pCarProgram->SetUniform("light1.Ls", glm::vec3(1, 1, 1));	// Specular colour of light
+	pCarProgram->SetUniform("material1.Ma", glm::vec3(0.5f));	// Ambient material reflectance
+	pCarProgram->SetUniform("material1.Md", glm::vec3(0.5f));	// Diffuse material reflectance
+	pCarProgram->SetUniform("material1.Ms", glm::vec3(1.0f));	// Specular material reflectance
+	pCarProgram->SetUniform("material1.shininess", 15.0f);		// Shininess material property
+
+	//Render the obstacle car 1
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car1Position);
+		modelViewMatrixStack *= m_car1Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pCarProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pCarProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pCarProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar1Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the obstacle car 2
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car2Position);
+		modelViewMatrixStack *= m_car2Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pCarProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pCarProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pCarProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar2Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the obstacle car 3
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car3Position);
+		modelViewMatrixStack *= m_car3Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pCarProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pCarProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pCarProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar3Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	//Render the obstacle car 4
+	modelViewMatrixStack.Push();
+		modelViewMatrixStack.Translate(m_car4Position);
+		modelViewMatrixStack *= m_car4Orientation;
+		modelViewMatrixStack.Scale(glm::vec3(1.75f));
+		pCarProgram->SetUniform("bUseTexture", true); // turn on/off texturing
+		pCarProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+		pCarProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+		// Render your object here
+		m_pCar4Mesh->Render();
+	modelViewMatrixStack.Pop();
+
+	// CURRENTLY BROKEN
+	// On second pass render a plane to display motion blur
+	if (pass == 1)
+	{
+		modelViewMatrixStack.Push();
+			modelViewMatrixStack.Translate(t * 3.0f);
+			modelViewMatrixStack.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0);
+			modelViewMatrixStack.Rotate(glm::vec3(0.0f, 0.0f, 1.0f), 180.0);
+			modelViewMatrixStack *= m_playerOrientation;
+			modelViewMatrixStack.Scale(-1.0);
+			pCarProgram->SetUniform("sampler0", 0);
+			pCarProgram->SetUniform("sampler1", 1);
+			pCarProgram->SetUniform("invMVP", glm::inverse(*m_pCamera->GetPerspectiveProjectionMatrix()));
+			pCarProgram->SetUniform("prevMVP", prevMatrix);
+			pCarProgram->SetUniform("matrices.modelViewMatrix", modelViewMatrixStack.Top());
+			pCarProgram->SetUniform("matrices.normalMatrix", m_pCamera->ComputeNormalMatrix(modelViewMatrixStack.Top()));
+			m_pFBO->BindTexture(0);
+			m_pPlane->Render(false);
+		modelViewMatrixStack.Pop();
+	}
+
+
 }
 
 void Game::Render()
 {
 	// FBO used to create motion blur but motion blur currently not working
-	m_pFBO->BindTexture(0);
+	m_pFBO->Bind(true);
 	RenderScene(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	RenderScene(1);
@@ -1198,7 +1231,7 @@ LRESULT Game::ProcessEvents(HWND window, UINT message, WPARAM w_param, LPARAM l_
 		// WASD CONTROLS
 		// barricade collsions done here with the turns left and right clamped within 30 and -30
 		case 'W':
-			if (m_playerSpeed < 0.2f)
+			if (m_playerSpeed < 0.4f)
 			{
 				// ACCELERATE
 				m_playerSpeed = m_playerSpeed + 0.001f;
