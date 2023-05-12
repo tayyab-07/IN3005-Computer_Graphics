@@ -1,0 +1,65 @@
+#version 400 core
+
+// In variables from vertex shader
+in vec3 vEyeNorm;
+in vec4 vEyePosition;
+in vec2 vTexCoord;
+
+out vec4 vOutputColour;		// The output colour
+
+uniform sampler2D sampler0;  // The texture sampler
+uniform bool bUseTexture;    // A flag indicating if texture-mapping should be applied
+
+// Structure holding light information:  its position as well as ambient, diffuse, and specular colours
+struct LightInfo
+{
+	vec4 position;
+	vec3 La;
+	vec3 Ld;
+	vec3 Ls;
+};
+
+// Structure holding material information:  its ambient, diffuse, and specular colours, and shininess
+struct MaterialInfo
+{
+	vec3 Ma;
+	vec3 Md;
+	vec3 Ms;
+	float shininess;
+};
+
+// Lights and materials passed in as uniform variables from client programme
+uniform LightInfo light1; 
+uniform MaterialInfo material1;
+
+// This function implements the Phong shading model
+vec3 PhongModel(vec4 eyePosition, vec3 eyeNorm)
+{
+	vec3 s = normalize(vec3(light1.position - eyePosition));
+	vec3 v = normalize(-eyePosition.xyz);
+	vec3 r = reflect(-s, eyeNorm);
+	vec3 n = eyeNorm;
+	vec3 ambient = light1.La * material1.Ma;
+	float sDotN = max(dot(s, n), 0.0f);
+	vec3 diffuse = light1.Ld * material1.Md * sDotN;
+	vec3 specular = vec3(0.0f);
+	float eps = 0.000001f; // add eps to shininess below -- pow not defined if second argument is 0 (as described in GLSL documentation)
+
+	if (sDotN > 0.0f) 
+	{
+		specular = light1.Ls * material1.Ms * pow(max(dot(r, v), 0.0f), material1.shininess + eps);
+	}	
+
+	return ambient + diffuse + specular;
+}
+
+void main()
+{
+	// colour from the phong model
+	vec3 vColour = PhongModel(vEyePosition, normalize(vEyeNorm));
+
+	// Get the texel colour from the texture sampler
+	vec4 vTexColour = texture(sampler0, vTexCoord);	
+	
+	vOutputColour = vTexColour*vec4(vColour, 1.0f);	// Combine object colour and texture
+}

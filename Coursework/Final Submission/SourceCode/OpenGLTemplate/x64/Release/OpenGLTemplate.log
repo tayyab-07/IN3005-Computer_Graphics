@@ -1,0 +1,42 @@
+﻿  Audio.cpp
+  BarricadeSpline.cpp
+  Camera.cpp
+  CatmullRom.cpp
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\CatmullRom.cpp(418,54): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\CatmullRom.cpp(419,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\CatmullRom.cpp(431,54): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\CatmullRom.cpp(432,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\CatmullRom.cpp(442,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\CatmullRom.cpp(443,58): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+  Cubemap.cpp
+  FaceVertexMesh.cpp
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\FaceVertexMesh.cpp(116,84): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+  FrameBufferObject.cpp
+  FreeTypeFont.cpp
+  Game.cpp
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\Game.cpp(1019,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\Game.cpp(1020,22): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\Game.cpp(1079,13): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\OpenGLTemplate\Game.cpp(1110,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  GameWindow.cpp
+  HeightMapTerrain.cpp
+  HighResolutionTimer.cpp
+  MatrixStack.cpp
+  OpenAssetImportMesh.cpp
+  Overpass.cpp
+  Plane.cpp
+  Shaders.cpp
+  Skybox.cpp
+  Sphere.cpp
+  Texture.cpp
+  Compiling...
+  TreeMesh.cpp
+  Tunnel.cpp
+  VertexBufferObject.cpp
+  VertexBufferObjectIndexed.cpp
+     Creating library C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\x64\Release\OpenGLTemplate.lib and object C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\x64\Release\OpenGLTemplate.exp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 1284 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  OpenGLTemplate.vcxproj -> C:\Users\T4YY4\Documents\GitHub\IN3005\Coursework\Final Submission\Template2023\x64\Release\OpenGLTemplate.exe
